@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView # type: ignore
+from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
 
 from django.contrib.auth.views import LoginView
@@ -52,13 +52,6 @@ class TaskList(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['tasks'] = context['tasks'].filter(user=self.request.user)
         context['count'] = context['tasks'].filter(complete=False).count()
-        
-        search_input = self.request.GET.get('search_box') or ''
-        if search_input:
-            context['tasks'] = context['tasks'].filter(title__startswith=search_input)
-            
-        context['search_input'] = search_input
-        
         return context
 
 class TaskDetail(LoginRequiredMixin, DetailView):
