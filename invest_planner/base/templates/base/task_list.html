@@ -1,13 +1,19 @@
-
 {% if request.user.is_authenticated %}
-    <p>{{request.user}}</p>
-    <a href="{% url 'account_logout' %}">Logout</a>
+<p>{{request.user}}</p>
+<a href="{% url 'account_logout' %}">Logout</a>
 {% endif %}
 
 
 <hr>
 <h1>Base Test</h1>
-<a href="{% url 'task-create' %}"> Add Task</a>
+
+<a href="{% url 'investment-create' %}"> Investment Form</a>
+
+<form method="get">
+    <input type="text" name="search_box" value="{{search_input}}">
+    <input type="submit" value="Search">
+    <a href="{% url 'task-create' %}"> Add Task</a>
+</form>
 
 <table>
     <tr>
