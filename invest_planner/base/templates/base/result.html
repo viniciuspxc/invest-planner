@@ -1,13 +1,13 @@
 {% extends 'base/base.html' %}
 
 {% block content %}
-<a href="{% url 'tasks' %}" class="btn btn-outline-primary mt-3 mx-3">Go Back</a>
+<a href="{% url 'investments' %}" class="btn btn-outline-primary mt-3 mx-3">Go Back</a>
 
 <div class="row mt-5">
     <div class="col-12 col-md-6 mx-md-auto">
         <h1>Investment Results</h1>
 
-        <h3>After {{ number_of_years }} years, your investment is worth ${{ total_result }}</h3>
+        <h3>After {{ number_of_years }} years, your investment is worth R${{ total_result }}</h3>
 
         <div class="mt-5">
             <table class="table">
