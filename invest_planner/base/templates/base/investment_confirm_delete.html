@@ -1,6 +1,6 @@
-<a href="{% url 'tasks' %}">Back</a>
+<a href="{% url 'investments' %}">Back</a>
 <form method="POST">
     {% csrf_token %}
-    <p>Confirm delete "{{task}}"</p>
+    <p>Confirm delete "{{investment}}"</p>
     <input type="submit" value="Delete"/>
 </form>

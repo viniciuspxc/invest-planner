@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,7 @@ LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 ACCOUNT_EMAIL_REQUIRED = 'true'
+
+GRAPH_MODELS = {
+  'app_labels': ["base", "auth"],
+}

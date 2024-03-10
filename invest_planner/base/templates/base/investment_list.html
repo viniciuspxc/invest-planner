@@ -1,0 +1,27 @@
+{% if request.user.is_authenticated %}
+<p>{{request.user}}</p>
+<a href="{% url 'account_logout' %}">Logout</a>
+{% endif %}
+
+<hr>
+<h1>Base Test</h1>
+
+<form method="get">
+    <input type="text" name="search_box" value="{{search_input}}">
+    <input type="submit" value="Search">
+    <a href="{% url 'investment-create' %}"> Add Investment</a>
+</form>
+
+<table>
+    <h2>List:</h2>
+    {% for investment in investments %}
+    <tr>
+        <td>{{investment.title}}: {{investment.starting_amount}}</td>
+        <td><a href="{% url 'investment' investment.id %}">View</a></td>
+        <td><a href="{% url 'investment-update' investment.id %}">Edit</a></td>
+        <td><a href="{% url 'investment-delete' investment.id %}">Delete</a></td>
+    </tr>
+    {% empty %}
+    <h3>No items in list</h3>
+    {% endfor %}
+</table>
