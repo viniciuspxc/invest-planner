@@ -1,3 +1,5 @@
+{% extends 'base/base.html' %}
+{% block content %}
 <h1>Investment Form </h1>
 <a href="{% url 'investments' %}">Go Back</a>
 
@@ -6,3 +8,4 @@
     {{ form.as_p }}
     <button type="submit">Add</button>
 </form>
+{% endblock content %}

@@ -1,11 +1,7 @@
-{% if request.user.is_authenticated %}
-<p>{{request.user}}</p>
-<a href="{% url 'account_logout' %}">Logout</a>
-{% endif %}
+{% extends 'base/base.html' %}
 
-<hr>
+{% block content %}
 <h1>Base Test</h1>
-
 <form method="get">
     <input type="text" name="search_box" value="{{search_input}}">
     <input type="submit" value="Search">
@@ -25,3 +21,5 @@
     <h3>No items in list</h3>
     {% endfor %}
 </table>
+
+{% endblock content %}
