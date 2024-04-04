@@ -1,11 +1,7 @@
 {% extends 'base/base.html' %}
 {% block content %}
-<h1>investment: {{investment}}</h1>
-
-<a href="{% url 'investments' %}">Go Back</a>
-
-<h1>Investment Results</h1>
-
-<h2>After {{ investment.number_of_years }} years, your investment is worth R$ {{ total_result }}</h2>
-
+    <h1>investment: {{ investment }}</h1>
+    <a href="{% url 'investments' %}">Go Back</a>
+    <h1>Investment Results</h1>
+    <h2>After {{ investment.number_of_years }} years, your investment is worth R$ {{ total_result }}</h2>
 {% endblock content %}

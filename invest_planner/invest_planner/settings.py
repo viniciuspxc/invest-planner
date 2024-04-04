@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'base.apps.BaseConfig',
     'login_app',
-    
+
     "allauth_ui",
     'allauth',
     'allauth.account',
@@ -153,4 +152,3 @@ ACCOUNT_EMAIL_REQUIRED = 'true'
 GRAPH_MODELS = {
     'app_labels': ["base", "auth"],
 }
-

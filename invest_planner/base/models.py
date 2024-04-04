@@ -1,10 +1,18 @@
+"""
+Models for Base App module
+"""
 from datetime import date
-from django.db import models
-from django.contrib.auth.models import User
 from decimal import Decimal
+from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Tag(models.Model):
+    """
+    Tag model
+    """
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=50, unique=True)
@@ -14,18 +22,28 @@ class Tag(models.Model):
 
 
 class InvestmentTag(Tag):
-    pass
+    """
+    InvestmentTag extends Tag
+    """
 
 
 class IncomeTag(Tag):
-    pass
+    """
+    IncomeTag extends Tag
+    """
 
 
 class ExpenseTag(Tag):
-    pass
+    """
+    ExpenseTag extends Tag
+    """
 
 
 class Investment(models.Model):
+    """
+    Investment model to save into database
+    """
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -47,6 +65,9 @@ class Investment(models.Model):
 
 
 class Income(models.Model):
+    """
+    Income model to save into database
+    """
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=100, blank=True)
@@ -60,6 +81,9 @@ class Income(models.Model):
 
 
 class Expense(models.Model):
+    """
+    Expenses model to save into database
+    """
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=100, blank=True)
