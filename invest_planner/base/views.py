@@ -94,55 +94,75 @@ class InvestmentDelete(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('investments')
 
 
+class InvestmentResults:
+    """
+    Represents the results of an investment calculation.
+    """
+
+    def __init__(self, total_result, yearly_results):
+        self.total_result = total_result
+        self.yearly_results = yearly_results
+
+
+class InvestmentCalculator:
+    """
+    Handles the calculation of investment results.
+    """
+
+    @staticmethod
+    def calculate_investment_results(form_data):
+        total_result = form_data['starting_amount']
+        total_interest = 0
+        yearly_results = {}
+
+        for i in range(1, int(form_data['number_of_years'] + 1)):
+            yearly_results[i] = {}
+
+            # Calculate the interest
+            interest = total_result * (form_data['return_rate'] / 100)
+            total_result += interest
+            total_interest += interest
+
+            # Add additional contribution
+            total_result += form_data['additional_contribution']
+
+            # Set yearly results
+            yearly_results[i]['interest'] = round(total_interest, 2)
+            yearly_results[i]['total'] = round(total_result, 2)
+
+        return InvestmentResults(round(total_result, 2), yearly_results)
+
+
 class InvestmentFormView(LoginRequiredMixin, View):
     """
-    View to form for a preview of investments
+    View to handle investment form submission and rendering.
     """
 
     def get(self, request):
         """
-        CRUD get
+        Renders the investment form.
         """
         form = InvestmentForm()
         return render(request, 'base/investment_form.html', {'form': form})
 
     def post(self, request):
         """
-        CRUD post
+        Handles form submission.
         """
         form = InvestmentForm(request.POST)
 
         if form.is_valid():
-            total_result = form.cleaned_data['starting_amount']
-            total_interest = 0
-            yearly_results = {}
+            form_data = form.cleaned_data
+            investment_results = InvestmentCalculator.calculate_investment_results(
+                form_data)
 
-            for i in range(1, int(form.cleaned_data['number_of_years'] + 1)):
-                yearly_results[i] = {}
-
-                # Calculate the interest
-                interest = total_result * \
-                    (form.cleaned_data['return_rate'] / 100)
-                total_result += interest
-                total_interest += interest
-
-                # Add additional contribution
-                total_result += form.cleaned_data['additional_contribution']
-
-                # Set yearly results
-                yearly_results[i]['interest'] = round(total_interest, 2)
-                yearly_results[i]['total'] = round(total_result, 2)
-
-            # Create context
             context = {
                 'form': form,
-                'total_result': round(total_result, 2),
-                'yearly_results': yearly_results,
-                'number_of_years': int(form.cleaned_data['number_of_years'])
+                'total_result': investment_results.total_result,
+                'yearly_results': investment_results.yearly_results,
+                'number_of_years': int(form_data['number_of_years'])
             }
 
-            # Render the template
             return render(request, 'base/investment_form.html', context)
 
-        # Form is not valid, return bad request response
         return HttpResponseBadRequest("Form is not valid.")
