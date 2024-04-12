@@ -4,10 +4,11 @@
     <form method="get">
         <input type="text" name="search_box" value="{{ search_input }}">
         <input type="submit" value="Search">
-        <a href="{% url 'investment-create' %}">Add Investment</a>
     </form>
     <table>
         <h2>List:</h2>
+        <a href="{% url 'investment-create' %}">Add Investment</a>
+        <a href="{% url 'investment-form' %}">Investment Calculation    </a>
         {% for investment in investments %}
             <tr>
                 <td>{{ investment.title }}: {{ investment.starting_amount }}</td>

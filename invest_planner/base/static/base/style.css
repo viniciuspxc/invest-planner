@@ -1,0 +1,64 @@
+* {
+    box-sizing: border-box;
+}
+
+.content-div {
+    padding: 20px;
+}
+
+.content-div form input {
+    color: black;
+}
+
+.content-div form select {
+    color: black;
+}
+
+.content-div input,
+select,
+textarea {
+    padding: 2px 4px;
+    box-sizing: border-box;
+    border: 3px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    -webkit-transition: 0.5s;
+    transition: 0.5s;
+    outline: none;
+}
+
+.content-div input:focus {
+    border: 3px solid #9500b3;
+}
+
+.content-div input[type=submit] {
+    background-color: #585858;
+    color: white;
+    padding: 4px 8px;
+    margin: 8px 2px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.content-div input[type=submit]:hover {
+    background-color: #9537a8;
+}
+
+
+.content-div a:link,
+.content-div a:visited {
+    background-color: #585858;
+    color: white;
+    padding: 4px 12px;
+    margin: 4px 2px;
+    border-radius: 4px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.content-div a:hover,
+.content-div a:active {
+    background-color: #9537a8;
+}

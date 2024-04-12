@@ -43,20 +43,25 @@ class Investment(models.Model):
     """
     Investment model to save into database
     """
-
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
 
     title = models.CharField(max_length=100, blank=True)
+
     starting_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
     number_of_years = models.IntegerField(default=0)
+
     return_rate = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
+
     additional_contribution = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
+
     active = models.BooleanField(default=True)
+
     starting_date = models.DateField(default=date.today)
+
     tags = models.ManyToManyField(
         InvestmentTag, related_name='investments', blank=True)
 

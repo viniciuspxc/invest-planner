@@ -61,10 +61,9 @@ class InvestmentCreate(LoginRequiredMixin, CreateView):
     View to form for investment creation
     """
     model = Investment
+    template_name = 'base/investment_create.html'
     fields = ['title', 'starting_amount', 'number_of_years', 'return_rate',
               'additional_contribution', 'active', 'starting_date', 'tags']
-    # fields = ['title', 'starting_amount', 'number_of_years',
-    #           'return_rate', 'additional_contribution', 'active', 'tags']
     success_url = reverse_lazy('investments')
 
     def form_valid(self, form):
@@ -80,6 +79,7 @@ class InvestmentUpdate(LoginRequiredMixin, UpdateView):
     View for editing investments
     """
     model = Investment
+    template_name = 'base/investment_create.html'
     fields = ['title', 'starting_amount', 'number_of_years', 'return_rate',
               'additional_contribution', 'active', 'starting_date', 'tags']
     success_url = reverse_lazy('investments')
@@ -127,7 +127,7 @@ class InvestmentFormView(LoginRequiredMixin, View):
                 total_interest += interest
 
                 # Add additional contribution
-                total_result += form.cleaned_data['annual_additional_contribution']
+                total_result += form.cleaned_data['additional_contribution']
 
                 # Set yearly results
                 yearly_results[i]['interest'] = round(total_interest, 2)
@@ -135,13 +135,14 @@ class InvestmentFormView(LoginRequiredMixin, View):
 
             # Create context
             context = {
+                'form': form,
                 'total_result': round(total_result, 2),
                 'yearly_results': yearly_results,
                 'number_of_years': int(form.cleaned_data['number_of_years'])
             }
 
             # Render the template
-            return render(request, 'base/result.html', context)
+            return render(request, 'base/investment_form.html', context)
 
         # Form is not valid, return bad request response
         return HttpResponseBadRequest("Form is not valid.")
