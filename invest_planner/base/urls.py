@@ -4,6 +4,9 @@ Define URLs for Base module
 from django.urls import path
 from .views import InvestmentList, InvestmentDetail
 from .views import InvestmentCreate, InvestmentUpdate, InvestmentDelete
+from .views import IncomeList, IncomeCreate, IncomeUpdate, IncomeDelete
+# from .views import ExpenseCreate, ExpenseUpdate, ExpenseDelete
+# from .views import TagCreate, TagUpdate, TagDelete
 from .views import InvestmentFormView
 
 urlpatterns = [
@@ -18,14 +21,12 @@ urlpatterns = [
     path('investment-form/', InvestmentFormView.as_view(),
          name='investment-form'),
 
-#     path('', incomeList.as_view(), name='incomes'),
-#     path('income/<int:pk>/', incomeDetail.as_view(), name='income'),
-#     path('income-create/', incomeCreate.as_view(),
-#          name='income-create'),
-#     path('income-update/<int:pk>/',
-#          incomeUpdate.as_view(), name='income-update'),
-#     path('income-delete/<int:pk>/',
-#          incomeDelete.as_view(), name='income-delete'),
-#     path('income-form/', incomeFormView.as_view(),
-#          name='income-form'),
+    path('income-list/', IncomeList.as_view(), name='income-list'),
+    path('income-create/', IncomeCreate.as_view(),
+         name='income-create'),
+    path('income-update/<int:pk>/',
+         IncomeUpdate.as_view(), name='income-update'),
+    path('income-delete/<int:pk>/',
+         IncomeDelete.as_view(), name='income-delete'),
+
 ]

@@ -2,6 +2,7 @@
 Create Views for Base module
 """
 from django.http import HttpResponseBadRequest
+from django.db.models import Sum
 from django.shortcuts import render
 from django.views import View
 from django.views.generic.list import ListView
@@ -9,7 +10,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Investment
+from .models import Investment, Income, Expense, Tag
 from .forms import InvestmentForm
 
 
@@ -32,6 +33,12 @@ class InvestmentList(LoginRequiredMixin, ListView):
             context['investments'] = context['investments'].filter(
                 title__startswith=search_input)
         context['search_input'] = search_input
+        
+        monthly_income = Income.objects.aggregate(Sum('monthly_income'))['monthly_income__sum'] or 0
+        context['monthly_income'] = monthly_income
+        
+        monthly_expense = Expense.objects.aggregate(Sum('monthly_expense'))['monthly_expense__sum'] or 0
+        context['monthly_expense'] = monthly_expense
         return context
 
 
@@ -166,3 +173,61 @@ class InvestmentFormView(LoginRequiredMixin, View):
             return render(request, 'base/investment_form.html', context)
 
         return HttpResponseBadRequest("Form is not valid.")
+    
+class IncomeList(LoginRequiredMixin, ListView):
+    """
+    Main View: list of incomes 
+    """
+    model = Income
+    context_object_name = 'incomes'
+
+    def get_queryset(self):
+        return Income.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_input = self.request.GET.get('search_box') or ''
+        if search_input:
+            context['incomes'] = context['incomes'].filter(
+                title__startswith=search_input)
+        context['search_input'] = search_input
+        
+        # monthly_income = Income.objects.aggregate(Sum('monthly_income'))['monthly_income__sum'] or 0
+        # context['monthly_income'] = monthly_income
+    
+        return context
+
+class IncomeCreate(LoginRequiredMixin, CreateView):
+    """
+    View to form for income creation
+    """
+    model = Income
+    template_name = 'base/income_create.html'
+    fields = ('title', 'monthly_income', 'tags')
+    success_url = reverse_lazy('income-list')
+
+    def form_valid(self, form):
+        """
+        Validade form and allow creation
+        """
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+class IncomeUpdate(LoginRequiredMixin, UpdateView):
+    """
+    View for editing incomes
+    """
+    model = Income
+    template_name = 'base/income_create.html'
+    fields = ('title', 'monthly_income', 'tags')
+    success_url = reverse_lazy('income-list')
+
+
+class IncomeDelete(LoginRequiredMixin, DeleteView):
+    """
+    View for deleting incomes
+    """
+    model = Income
+    context_object_name = 'income'
+    success_url = reverse_lazy('income-list')

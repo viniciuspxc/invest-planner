@@ -7,19 +7,15 @@
     </form>
     <table>
         <h2>List:</h2>
-        <a href="{% url 'investment-create' %}">Add Investment</a>
-        <a href="{% url 'investment-form' %}">Investment Calculation    </a>
-        {% for investment in investments %}
+        <a href="{% url 'income-create' %}">Add income</a>
+        {% for income in incomes %}
             <tr>
-                <td>{{ investment.title }}: {{ investment.starting_amount }}</td>
+                <td>{{ income.title }}: {{ income.monthly_income }}</td>
                 <td>
-                    <a href="{% url 'investment' investment.id %}">View</a>
+                    <a href="{% url 'income-update' income.id %}">Edit</a>
                 </td>
                 <td>
-                    <a href="{% url 'investment-update' investment.id %}">Edit</a>
-                </td>
-                <td>
-                    <a href="{% url 'investment-delete' investment.id %}">Delete</a>
+                    <a href="{% url 'income-delete' income.id %}">Delete</a>
                 </td>
             </tr>
         {% empty %}
@@ -32,7 +28,7 @@
         <td>R$ {{ monthly_income|floatformat:2 }}</td>
         <td>
             <a href="{% url 'income-create' %}">Add income</a>
-            <a href="{% url 'income-list' %}">income list</a>
+            <a href="{% url 'income-create' %}">income list</a>
         </td>
     </table>
 {% endblock content %}
