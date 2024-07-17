@@ -231,3 +231,62 @@ class IncomeDelete(LoginRequiredMixin, DeleteView):
     model = Income
     context_object_name = 'income'
     success_url = reverse_lazy('income-list')
+    
+
+class ExpenseList(LoginRequiredMixin, ListView):
+    """
+    Main View: list of expenses 
+    """
+    model = Expense
+    context_object_name = 'expenses'
+
+    def get_queryset(self):
+        return Expense.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_input = self.request.GET.get('search_box') or ''
+        if search_input:
+            context['expenses'] = context['expenses'].filter(
+                title__startswith=search_input)
+        context['search_input'] = search_input
+        
+        # monthly_expense = expense.objects.aggregate(Sum('monthly_expense'))['monthly_expense__sum'] or 0
+        # context['monthly_expense'] = monthly_expense
+    
+        return context
+
+class ExpenseCreate(LoginRequiredMixin, CreateView):
+    """
+    View to form for expense creation
+    """
+    model = Expense
+    template_name = 'base/expense_create.html'
+    fields = ('title', 'monthly_expense', 'tags')
+    success_url = reverse_lazy('expense-list')
+
+    def form_valid(self, form):
+        """
+        Validade form and allow creation
+        """
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+class ExpenseUpdate(LoginRequiredMixin, UpdateView):
+    """
+    View for editing expenses
+    """
+    model = Expense
+    template_name = 'base/expense_create.html'
+    fields = ('title', 'monthly_expense', 'tags')
+    success_url = reverse_lazy('expense-list')
+
+
+class ExpenseDelete(LoginRequiredMixin, DeleteView):
+    """
+    View for deleting expenses
+    """
+    model = Expense
+    context_object_name = 'expense'
+    success_url = reverse_lazy('expense-list')

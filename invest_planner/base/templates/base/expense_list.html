@@ -1,0 +1,34 @@
+{% extends 'base/base.html' %}
+{% block content %}
+    <h1>Base Test</h1>
+    <form method="get">
+        <input type="text" name="search_box" value="{{ search_input }}">
+        <input type="submit" value="Search">
+    </form>
+    <table>
+        <h2>List:</h2>
+        <a href="{% url 'expense-create' %}">Add expense</a>
+        {% for expense in expenses %}
+            <tr>
+                <td>{{ expense.title }}: {{ expense.monthly_expense }}</td>
+                <td>
+                    <a href="{% url 'expense-update' expense.id %}">Edit</a>
+                </td>
+                <td>
+                    <a href="{% url 'expense-delete' expense.id %}">Delete</a>
+                </td>
+            </tr>
+        {% empty %}
+            <h3>No items in list</h3>
+        {% endfor %}
+    </table>
+    <table>
+        <h2>expense:</h2>
+        <td>Total: </td>
+        <td>R$ {{ monthly_expense|floatformat:2 }}</td>
+        <td>
+            <a href="{% url 'expense-create' %}">Add expense</a>
+            <a href="{% url 'expense-create' %}">expense list</a>
+        </td>
+    </table>
+{% endblock content %}

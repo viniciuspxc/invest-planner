@@ -35,4 +35,13 @@
             <a href="{% url 'income-list' %}">income list</a>
         </td>
     </table>
+    <table>
+        <h2>expense:</h2>
+        <td>Total: </td>
+        <td>R$ {{ monthly_expense|floatformat:2 }}</td>
+        <td>
+            <a href="{% url 'expense-create' %}">Add expense</a>
+            <a href="{% url 'expense-list' %}">expense list</a>
+        </td>
+    </table>
 {% endblock content %}

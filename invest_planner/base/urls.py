@@ -5,7 +5,7 @@ from django.urls import path
 from .views import InvestmentList, InvestmentDetail
 from .views import InvestmentCreate, InvestmentUpdate, InvestmentDelete
 from .views import IncomeList, IncomeCreate, IncomeUpdate, IncomeDelete
-# from .views import ExpenseCreate, ExpenseUpdate, ExpenseDelete
+from .views import ExpenseList, ExpenseCreate, ExpenseUpdate, ExpenseDelete
 # from .views import TagCreate, TagUpdate, TagDelete
 from .views import InvestmentFormView
 
@@ -28,5 +28,13 @@ urlpatterns = [
          IncomeUpdate.as_view(), name='income-update'),
     path('income-delete/<int:pk>/',
          IncomeDelete.as_view(), name='income-delete'),
+
+    path('expense-list/', ExpenseList.as_view(), name='expense-list'),
+    path('expense-create/', ExpenseCreate.as_view(),
+         name='expense-create'),
+    path('expense-update/<int:pk>/',
+         ExpenseUpdate.as_view(), name='expense-update'),
+    path('expense-delete/<int:pk>/',
+         ExpenseDelete.as_view(), name='expense-delete'),
 
 ]

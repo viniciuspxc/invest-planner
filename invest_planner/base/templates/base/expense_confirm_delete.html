@@ -1,9 +1,9 @@
 {% extends 'base/base.html' %}
 {% block content %}
-    <a href="{% url 'investments' %}">Back</a>
+    <a href="{% url 'expense' %}">Back</a>
     <form method="post">
         {% csrf_token %}
-        <p>Confirm delete "{{ income }}"</p>
+        <p>Confirm delete "{{ expense }}"</p>
         <input type="submit" value="Delete" />
     </form>
 {% endblock content %}
