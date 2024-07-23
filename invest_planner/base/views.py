@@ -12,9 +12,12 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Investment, Income, Expense, Tag
 from .forms import InvestmentForm
-
+from .models import InvestmentTag, IncomeTag, ExpenseTag
+from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
 
 # pylint: disable=too-many-ancestors
+
+
 class InvestmentList(LoginRequiredMixin, ListView):
     """
     Main View: list of investments 
@@ -33,11 +36,13 @@ class InvestmentList(LoginRequiredMixin, ListView):
             context['investments'] = context['investments'].filter(
                 title__startswith=search_input)
         context['search_input'] = search_input
-        
-        monthly_income = Income.objects.aggregate(Sum('monthly_income'))['monthly_income__sum'] or 0
+
+        monthly_income = Income.objects.aggregate(Sum('monthly_income'))[
+            'monthly_income__sum'] or 0
         context['monthly_income'] = monthly_income
-        
-        monthly_expense = Expense.objects.aggregate(Sum('monthly_expense'))['monthly_expense__sum'] or 0
+
+        monthly_expense = Expense.objects.aggregate(Sum('monthly_expense'))[
+            'monthly_expense__sum'] or 0
         context['monthly_expense'] = monthly_expense
         return context
 
@@ -173,7 +178,8 @@ class InvestmentFormView(LoginRequiredMixin, View):
             return render(request, 'base/investment_form.html', context)
 
         return HttpResponseBadRequest("Form is not valid.")
-    
+
+
 class IncomeList(LoginRequiredMixin, ListView):
     """
     Main View: list of incomes 
@@ -191,11 +197,12 @@ class IncomeList(LoginRequiredMixin, ListView):
             context['incomes'] = context['incomes'].filter(
                 title__startswith=search_input)
         context['search_input'] = search_input
-        
+
         # monthly_income = Income.objects.aggregate(Sum('monthly_income'))['monthly_income__sum'] or 0
         # context['monthly_income'] = monthly_income
-    
+
         return context
+
 
 class IncomeCreate(LoginRequiredMixin, CreateView):
     """
@@ -231,7 +238,7 @@ class IncomeDelete(LoginRequiredMixin, DeleteView):
     model = Income
     context_object_name = 'income'
     success_url = reverse_lazy('income-list')
-    
+
 
 class ExpenseList(LoginRequiredMixin, ListView):
     """
@@ -250,11 +257,12 @@ class ExpenseList(LoginRequiredMixin, ListView):
             context['expenses'] = context['expenses'].filter(
                 title__startswith=search_input)
         context['search_input'] = search_input
-        
+
         # monthly_expense = expense.objects.aggregate(Sum('monthly_expense'))['monthly_expense__sum'] or 0
         # context['monthly_expense'] = monthly_expense
-    
+
         return context
+
 
 class ExpenseCreate(LoginRequiredMixin, CreateView):
     """
@@ -290,3 +298,95 @@ class ExpenseDelete(LoginRequiredMixin, DeleteView):
     model = Expense
     context_object_name = 'expense'
     success_url = reverse_lazy('expense-list')
+
+
+class TagListView(ListView):
+
+    # def get_queryset(self):
+    #     return {
+    #         'investment_tags': InvestmentTag.objects.all(),
+    #         'income_tags': IncomeTag.objects.all(),
+    #         'expense_tags': ExpenseTag.objects.all()
+    #     }
+    """
+    tags view 
+    """
+    template_name = 'tags/tag_list.html'
+
+    def get_queryset(self):
+        return {
+            'investment_tags': InvestmentTag.objects.all(),
+            'income_tags': IncomeTag.objects.all(),
+            'expense_tags': ExpenseTag.objects.all(),
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context = {
+            'investment_tags': InvestmentTag.objects.all(),
+            'income_tags': IncomeTag.objects.all(),
+            'expense_tags': ExpenseTag.objects.all(),
+        }
+        tags = Tag.objects.all()
+        context['tags'] = tags
+        return context
+
+
+class InvestmentTagCreateView(CreateView):
+    model = InvestmentTag
+    form_class = InvestmentTagForm
+    template_name = 'tags/tag_form.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class InvestmentTagUpdateView(UpdateView):
+    model = InvestmentTag
+    form_class = InvestmentTagForm
+    template_name = 'tags/tag_form.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class InvestmentTagDeleteView(DeleteView):
+    model = InvestmentTag
+    template_name = 'tags/tag_confirm_delete.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class IncomeTagCreateView(CreateView):
+    model = IncomeTag
+    form_class = IncomeTagForm
+    template_name = 'tags/tag_form.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class IncomeTagUpdateView(UpdateView):
+    model = IncomeTag
+    form_class = IncomeTagForm
+    template_name = 'tags/tag_form.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class IncomeTagDeleteView(DeleteView):
+    model = IncomeTag
+    template_name = 'tags/tag_confirm_delete.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class ExpenseTagCreateView(CreateView):
+    model = ExpenseTag
+    form_class = ExpenseTagForm
+    template_name = 'tags/tag_form.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class ExpenseTagUpdateView(UpdateView):
+    model = ExpenseTag
+    form_class = ExpenseTagForm
+    template_name = 'tags/tag_form.html'
+    success_url = reverse_lazy('tag-list')
+
+
+class ExpenseTagDeleteView(DeleteView):
+    model = ExpenseTag
+    template_name = 'tags/tag_confirm_delete.html'
+    success_url = reverse_lazy('tag-list')

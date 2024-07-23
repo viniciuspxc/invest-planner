@@ -1,0 +1,48 @@
+{% extends 'base/base.html' %}
+{% block content %}
+    <h1>Tags List</h1>
+    <a href="{% url 'investmenttag-create' %}">Add Investment Tag</a>
+    <a href="{% url 'incometag-create' %}">Add Income Tag</a>
+    <a href="{% url 'expensetag-create' %}">Add Expense Tag</a>
+    
+    <h2>Investment Tags</h2>
+    <ul>
+        {% for tag in investment_tags %}
+            <li>
+                {{ tag.name }}
+                <a href="{% url 'investmenttag-update' tag.id %}">Edit</a>
+                <a href="{% url 'investmenttag-delete' tag.id %}">Delete</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Income Tags</h2>
+    <ul>
+        {% for tag in income_tags %}
+            <li>
+                {{ tag.name }}
+                <a href="{% url 'incometag-update' tag.id %}">Edit</a>
+                <a href="{% url 'incometag-delete' tag.id %}">Delete</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Expense Tags</h2>
+    <ul>
+        {% for tag in expense_tags %}
+            <li>
+                {{ tag.name }}
+                <a href="{% url 'expensetag-update' tag.id %}">Edit</a>
+                <a href="{% url 'expensetag-delete' tag.id %}">Delete</a>
+            </li>
+        {% endfor %}
+    </ul>
+    <h2>Tags (Temporary)</h2>
+    <ul>
+        {% for tag in tags %}
+            <li>
+                {{ tag.name }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

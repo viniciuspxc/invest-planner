@@ -8,6 +8,12 @@ from .views import IncomeList, IncomeCreate, IncomeUpdate, IncomeDelete
 from .views import ExpenseList, ExpenseCreate, ExpenseUpdate, ExpenseDelete
 # from .views import TagCreate, TagUpdate, TagDelete
 from .views import InvestmentFormView
+from .views import (
+    TagListView,
+    InvestmentTagCreateView, InvestmentTagUpdateView, InvestmentTagDeleteView,
+    IncomeTagCreateView, IncomeTagUpdateView, IncomeTagDeleteView,
+    ExpenseTagCreateView, ExpenseTagUpdateView, ExpenseTagDeleteView
+)
 
 urlpatterns = [
     path('', InvestmentList.as_view(), name='investments'),
@@ -37,4 +43,14 @@ urlpatterns = [
     path('expense-delete/<int:pk>/',
          ExpenseDelete.as_view(), name='expense-delete'),
 
+    path('tags/', TagListView.as_view(), name='tag-list'),
+    path('tags/investment/create/', InvestmentTagCreateView.as_view(), name='investmenttag-create'),
+    path('tags/investment/update/<int:pk>/', InvestmentTagUpdateView.as_view(), name='investmenttag-update'),
+    path('tags/investment/delete/<int:pk>/', InvestmentTagDeleteView.as_view(), name='investmenttag-delete'),
+    path('tags/income/create/', IncomeTagCreateView.as_view(), name='incometag-create'),
+    path('tags/income/update/<int:pk>/', IncomeTagUpdateView.as_view(), name='incometag-update'),
+    path('tags/income/delete/<int:pk>/', IncomeTagDeleteView.as_view(), name='incometag-delete'),
+    path('tags/expense/create/', ExpenseTagCreateView.as_view(), name='expensetag-create'),
+    path('tags/expense/update/<int:pk>/', ExpenseTagUpdateView.as_view(), name='expensetag-update'),
+    path('tags/expense/delete/<int:pk>/', ExpenseTagDeleteView.as_view(), name='expensetag-delete'),
 ]
