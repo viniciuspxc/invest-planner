@@ -14,6 +14,9 @@ from .models import Investment, Income, Expense, Tag
 from .forms import InvestmentForm
 from .models import InvestmentTag, IncomeTag, ExpenseTag
 from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
+import requests
+from django.views import View
+
 
 # pylint: disable=too-many-ancestors
 
@@ -390,3 +393,30 @@ class ExpenseTagDeleteView(DeleteView):
     model = ExpenseTag
     template_name = 'tags/tag_confirm_delete.html'
     success_url = reverse_lazy('tag-list')
+
+
+def get_selic_rate():
+    url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados/ultimos/1?formato=json"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            selic_rate = data[-1]['valor']  # Pegar o último valor disponível
+            last_date = data[-1]['data']  # Pegar a última data
+            return selic_rate, last_date
+        else:
+            return None
+    else:
+        return None
+
+class InvestmentRatesView(View):
+    def get(self, request):
+        selic_rate, last_date = get_selic_rate()
+
+        context = {
+            'selic_rate': selic_rate,
+            'cdi_rate': float(selic_rate) - 0.10,
+            'last_date': last_date
+        }
+        return render(request, 'base/investment_rates.html', context)

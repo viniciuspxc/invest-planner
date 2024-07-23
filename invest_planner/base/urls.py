@@ -14,6 +14,7 @@ from .views import (
     IncomeTagCreateView, IncomeTagUpdateView, IncomeTagDeleteView,
     ExpenseTagCreateView, ExpenseTagUpdateView, ExpenseTagDeleteView
 )
+from .views import InvestmentRatesView
 
 urlpatterns = [
     path('', InvestmentList.as_view(), name='investments'),
@@ -53,4 +54,6 @@ urlpatterns = [
     path('tags/expense/create/', ExpenseTagCreateView.as_view(), name='expensetag-create'),
     path('tags/expense/update/<int:pk>/', ExpenseTagUpdateView.as_view(), name='expensetag-update'),
     path('tags/expense/delete/<int:pk>/', ExpenseTagDeleteView.as_view(), name='expensetag-delete'),
+    
+    path('investment-rates/', InvestmentRatesView.as_view(), name='investment-rates'),
 ]
