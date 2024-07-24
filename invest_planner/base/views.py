@@ -11,12 +11,12 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Investment, Income, Expense, Tag
-from .forms import InvestmentForm
 from .models import InvestmentTag, IncomeTag, ExpenseTag
 from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
 import requests
+from .forms import InvestmentForm
 from django.views import View
-
+from django.core.cache import cache
 
 # pylint: disable=too-many-ancestors
 
@@ -77,8 +77,7 @@ class InvestmentCreate(LoginRequiredMixin, CreateView):
     """
     model = Investment
     template_name = 'base/investment_create.html'
-    fields = ['title', 'starting_amount', 'number_of_years', 'return_rate',
-              'additional_contribution', 'active', 'starting_date', 'tags']
+    form_class = InvestmentForm
     success_url = reverse_lazy('investments')
 
     def form_valid(self, form):
@@ -95,8 +94,7 @@ class InvestmentUpdate(LoginRequiredMixin, UpdateView):
     """
     model = Investment
     template_name = 'base/investment_create.html'
-    fields = ['title', 'starting_amount', 'number_of_years', 'return_rate',
-              'additional_contribution', 'active', 'starting_date', 'tags']
+    form_class = InvestmentForm
     success_url = reverse_lazy('investments')
 
 
@@ -117,70 +115,6 @@ class InvestmentResults:
     def __init__(self, total_result, yearly_results):
         self.total_result = total_result
         self.yearly_results = yearly_results
-
-
-class InvestmentCalculator:
-    """
-    Handles the calculation of investment results.
-    """
-
-    @staticmethod
-    def calculate_investment_results(form_data):
-        total_result = form_data['starting_amount']
-        total_interest = 0
-        yearly_results = {}
-
-        for i in range(1, int(form_data['number_of_years'] + 1)):
-            yearly_results[i] = {}
-
-            # Calculate the interest
-            interest = total_result * (form_data['return_rate'] / 100)
-            total_result += interest
-            total_interest += interest
-
-            # Add additional contribution
-            total_result += form_data['additional_contribution']
-
-            # Set yearly results
-            yearly_results[i]['interest'] = round(total_interest, 2)
-            yearly_results[i]['total'] = round(total_result, 2)
-
-        return InvestmentResults(round(total_result, 2), yearly_results)
-
-
-class InvestmentFormView(LoginRequiredMixin, View):
-    """
-    View to handle investment form submission and rendering.
-    """
-
-    def get(self, request):
-        """
-        Renders the investment form.
-        """
-        form = InvestmentForm()
-        return render(request, 'base/investment_form.html', {'form': form})
-
-    def post(self, request):
-        """
-        Handles form submission.
-        """
-        form = InvestmentForm(request.POST)
-
-        if form.is_valid():
-            form_data = form.cleaned_data
-            investment_results = InvestmentCalculator.calculate_investment_results(
-                form_data)
-
-            context = {
-                'form': form,
-                'total_result': investment_results.total_result,
-                'yearly_results': investment_results.yearly_results,
-                'number_of_years': int(form_data['number_of_years'])
-            }
-
-            return render(request, 'base/investment_form.html', context)
-
-        return HttpResponseBadRequest("Form is not valid.")
 
 
 class IncomeList(LoginRequiredMixin, ListView):
@@ -395,28 +329,39 @@ class ExpenseTagDeleteView(DeleteView):
     success_url = reverse_lazy('tag-list')
 
 
-def get_selic_rate():
-    url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados/ultimos/1?formato=json"
-    response = requests.get(url)
+def get_central_bank_rate():
+    url_cdi = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json"
+    response_cdi = requests.get(url_cdi)
 
-    if response.status_code == 200:
-        data = response.json()
-        if data:
-            selic_rate = data[-1]['valor']  # Pegar o último valor disponível
-            last_date = data[-1]['data']  # Pegar a última data
-            return selic_rate, last_date
-        else:
-            return None
-    else:
-        return None
+    if response_cdi.status_code == 200:
+        cdi_data = response_cdi.json()
+        if cdi_data:
+            cdi_rate = cdi_data[-1]['valor']
+            cdi_date = cdi_data[-1]['data']
+            cache.set('cdi_rate', cdi_rate, timeout=3600)
+            cache.set('cdi_date', cdi_date, timeout=3600)
+
+    url_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/1?formato=json"
+    response_selic = requests.get(url_selic)
+    if response_selic.status_code == 200:
+        selic_data = response_selic.json()
+        if selic_data:
+            selic_rate = selic_data[-1]['valor']
+            selic_date = selic_data[-1]['data']
+            cache.set('selic_rate', selic_rate, timeout=3600)
+            cache.set('selic_date', selic_date, timeout=3600)
+
+    context = {
+        'selic_rate': selic_rate,
+        'selic_date': selic_date,
+        'cdi_rate': cdi_rate,
+        'cdi_date': cdi_date,
+    }
+    return context
+
 
 class InvestmentRatesView(View):
     def get(self, request):
-        selic_rate, last_date = get_selic_rate()
+        context = get_central_bank_rate()
 
-        context = {
-            'selic_rate': selic_rate,
-            'cdi_rate': float(selic_rate) - 0.10,
-            'last_date': last_date
-        }
         return render(request, 'base/investment_rates.html', context)

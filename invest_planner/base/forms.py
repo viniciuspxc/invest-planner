@@ -7,10 +7,18 @@ from .models import InvestmentTag, IncomeTag, ExpenseTag
 
 
 class InvestmentForm(forms.ModelForm):
+    starting_date = forms.DateField(
+        widget=forms.DateInput(
+            attrs={
+                'type': 'date'
+            }
+        )
+    )
+
     class Meta:
         model = Investment
-        fields = ['starting_amount', 'number_of_years', 'return_rate',
-                  'additional_contribution']
+        fields = ['title', 'starting_amount', 'number_of_years', 'return_rate',
+                  'additional_contribution', 'active', 'starting_date', 'tags']
 
 
 class InvestmentTagForm(forms.ModelForm):
