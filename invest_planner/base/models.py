@@ -45,25 +45,37 @@ class Investment(models.Model):
     """
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
-
+    
     title = models.CharField(max_length=100, blank=True)
-
     starting_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
     number_of_years = models.IntegerField(default=0)
-
     return_rate = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
-
     additional_contribution = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
-
     active = models.BooleanField(default=True)
-
     starting_date = models.DateField(default=date.today)
-
     tags = models.ManyToManyField(
         InvestmentTag, related_name='investments', blank=True)
+    
+    # New fields for investment type and rate type
+    INVESTMENT_TYPES = (
+        ('pre', 'Pré-fixado'),
+        ('pos', 'Pós-fixado')
+    )
+
+    RATE_TYPES = (
+        ('cdi', 'CDI'),
+        ('selic', 'SELIC')
+    )
+
+    investment_type = models.CharField(
+        max_length=3, choices=INVESTMENT_TYPES, default='pre')
+    rate_type = models.CharField(
+        max_length=5, choices=RATE_TYPES, blank=True, null=True)
+    rate_percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} ({self.starting_amount})"

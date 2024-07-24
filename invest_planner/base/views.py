@@ -80,6 +80,11 @@ class InvestmentCreate(LoginRequiredMixin, CreateView):
     form_class = InvestmentForm
     success_url = reverse_lazy('investments')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(get_central_bank_rate())
+        return context
+
     def form_valid(self, form):
         """
         Validade form and allow creation
@@ -96,6 +101,11 @@ class InvestmentUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'base/investment_create.html'
     form_class = InvestmentForm
     success_url = reverse_lazy('investments')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(get_central_bank_rate())
+        return context
 
 
 class InvestmentDelete(LoginRequiredMixin, DeleteView):
@@ -330,32 +340,39 @@ class ExpenseTagDeleteView(DeleteView):
 
 
 def get_central_bank_rate():
+    # URLs das taxas
     url_cdi = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json"
-    response_cdi = requests.get(url_cdi)
-
-    if response_cdi.status_code == 200:
-        cdi_data = response_cdi.json()
-        if cdi_data:
-            cdi_rate = cdi_data[-1]['valor']
-            cdi_date = cdi_data[-1]['data']
-            cache.set('cdi_rate', cdi_rate, timeout=3600)
-            cache.set('cdi_date', cdi_date, timeout=3600)
-
     url_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/1?formato=json"
-    response_selic = requests.get(url_selic)
-    if response_selic.status_code == 200:
-        selic_data = response_selic.json()
-        if selic_data:
-            selic_rate = selic_data[-1]['valor']
-            selic_date = selic_data[-1]['data']
-            cache.set('selic_rate', selic_rate, timeout=3600)
-            cache.set('selic_date', selic_date, timeout=3600)
+
+    # Função para obter a taxa do Banco Central
+    def fetch_rate(url, cache_key_rate, cache_key_date):
+        rate, date = None, None
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                rate = data[-1]['valor']
+                date = data[-1]['data']
+                # Cache por 1 dia
+                cache.set(cache_key_rate, rate, timeout=86400)
+                cache.set(cache_key_date, date, timeout=86400)
+        return rate, date
+
+    # Obter as taxas e datas do cache ou da API
+    cdi_rate, cdi_date = cache.get('cdi_rate'), cache.get('cdi_date')
+    if cdi_rate is None or cdi_date is None:
+        cdi_rate, cdi_date = fetch_rate(url_cdi, 'cdi_rate', 'cdi_date')
+
+    selic_rate, selic_date = cache.get('selic_rate'), cache.get('selic_date')
+    if selic_rate is None or selic_date is None:
+        selic_rate, selic_date = fetch_rate(
+            url_selic, 'selic_rate', 'selic_date')
 
     context = {
-        'selic_rate': selic_rate,
-        'selic_date': selic_date,
-        'cdi_rate': cdi_rate,
-        'cdi_date': cdi_date,
+        'taxes': [
+            {'name': 'CDI', 'rate': cdi_rate, 'date': cdi_date},
+            {'name': 'SELIC', 'rate': selic_rate, 'date': selic_date}
+        ]
     }
     return context
 
@@ -363,5 +380,4 @@ def get_central_bank_rate():
 class InvestmentRatesView(View):
     def get(self, request):
         context = get_central_bank_rate()
-
         return render(request, 'base/investment_rates.html', context)
