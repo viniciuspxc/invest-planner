@@ -5,20 +5,27 @@
 <a href="javascript:history.back()">Go Back</a>
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    <table>
+        {% for field in form %}
+        <tr>
+            <td><label for="{{ field.id_for_label }}">{{ field.label }}</label></td>
+            <td>{{ field }}</td>
+        </tr>
+        {% endfor %}
+    </table>
     <input type="submit" name="action" value="{% if form.instance.pk %}Edit{% else %}Add{% endif %}">
 </form>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const rateTypeField = document.querySelector('select[name="rate_type"]');
-    const ratePercentageField = document.querySelector('input[name="rate_percentage"]');
+    document.addEventListener('DOMContentLoaded', function () {
+        const rateTypeField = document.querySelector('select[name="rate_type"]');
+        const ratePercentageField = document.querySelector('input[name="rate_value"]');
 
-    const rates = {
-        {% for tax in taxes %}
-            '{{ tax.name }}': {{ tax.rate }},
-        {% endfor %}
-    };
+        const rates = {
+            {% for tax in taxes %}
+                '{{ tax.name }}': {{ tax.rate }},
+                {% endfor %}
+            };
 
     function updateRatePercentage() {
         const selectedRateType = rateTypeField.value;
@@ -32,8 +39,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     rateTypeField.addEventListener('change', updateRatePercentage);
-    
+
     updateRatePercentage();
-});
+    });
 </script>
 {% endblock %}

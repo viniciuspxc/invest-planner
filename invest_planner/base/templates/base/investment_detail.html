@@ -1,7 +1,33 @@
 {% extends 'base/base.html' %}
+
 {% block content %}
-    <h1>investment: {{ investment }}</h1>
+    <h1>Investment: {{ investment.title }}</h1>
     <a href="{% url 'investments' %}">Go Back</a>
     <h1>Investment Results</h1>
-    <h2>After {{ investment.number_of_years }} years, your investment is worth R$ {{ total_result }}</h2>
-{% endblock content %}
+    <h2>Investment Overview</h2>
+    <p>After {{ investment.number_of_years }} years, your investment is worth R$ {{ total_result }}</p>
+
+    <h2>Monthly Gain Breakdown</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Monthly Income (R$)</th>
+                <th>Total Value (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for month in months %}
+            <tr>
+                <td>{{ month.date|date:"F Y" }}</td>
+                <td>{{ month.monthly_income }}</td>
+                <td>{{ month.total_value }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

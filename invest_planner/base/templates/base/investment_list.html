@@ -1,46 +1,66 @@
 {% extends 'base/base.html' %}
 {% block content %}
-    <h1>Base Test</h1>
-    <form method="get">
-        <input type="text" name="search_box" value="{{ search_input }}">
-        <input type="submit" value="Search">
-    </form>
-    <table>
-        <h2>List:</h2>
-        <a href="{% url 'investment-create' %}">Add Investment</a>
+<h1>Homepage</h1>
+
+<table>
+    <td>Total Investment Value: &nbsp;</td>
+    <td>R$ {{ total_investment_value|floatformat:2 }}</td>
+</table>
+
+<h2>Investments:</h2>
+<form method="get">
+    <input type="text" name="search_box" value="{{ search_input }}">
+    <input type="submit" value="Search">
+</form>
+<a href="{% url 'investment-create' %}">Add Investment</a>
+<table>
+    <thead>
+        <tr>
+            <th> Title </th>
+            <th> Starting Amount </th>
+            <th> Status </th>
+            <th> Actions </th>
+        </tr>
+    </thead>
+    <tbody>
         {% for investment in investments %}
-            <tr>
-                <td>{{ investment.title }}: {{ investment.starting_amount }}</td>
-                <td>
-                    <a href="{% url 'investment' investment.id %}">View</a>
-                </td>
-                <td>
-                    <a href="{% url 'investment-update' investment.id %}">Edit</a>
-                </td>
-                <td>
-                    <a href="{% url 'investment-delete' investment.id %}">Delete</a>
-                </td>
-            </tr>
+        <tr {% if investment.active %} style="color: white;" {% else %} style="color: gray;" {% endif %}>
+            <td>{{ investment.title }}</td>
+            <td>{{ investment.starting_amount }}</td>
+            <td>
+                {% if investment.active %} active
+                {% else %} inactive
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'investment' investment.id %}">View</a> |
+                <a href="{% url 'investment-update' investment.id %}">Edit</a> |
+                <a href="{% url 'investment-delete' investment.id %}">Delete</a>
+            </td>
+        </tr>
         {% empty %}
-            <h3>No items in list</h3>
+        <tr>
+            <td colspan="4">No items in list</td>
+        </tr>
         {% endfor %}
-    </table>
-    <table>
-        <h2>Income:</h2>
-        <td>Total: </td>
-        <td>R$ {{ monthly_income|floatformat:2 }}</td>
-        <td>
-            <a href="{% url 'income-create' %}">Add income</a>
-            <a href="{% url 'income-list' %}">income list</a>
-        </td>
-    </table>
-    <table>
-        <h2>expense:</h2>
-        <td>Total: </td>
-        <td>R$ {{ monthly_expense|floatformat:2 }}</td>
-        <td>
-            <a href="{% url 'expense-create' %}">Add expense</a>
-            <a href="{% url 'expense-list' %}">expense list</a>
-        </td>
-    </table>
+    </tbody>
+</table>
+<table>
+    <h2>Income:</h2>
+    <td>Total: </td>
+    <td>R$ {{ monthly_income|floatformat:2 }}</td>
+    <td>
+        <a href="{% url 'income-create' %}">Add income</a>
+        <a href="{% url 'income-list' %}">income list</a>
+    </td>
+</table>
+<table>
+    <h2>expense:</h2>
+    <td>Total: </td>
+    <td>R$ {{ monthly_expense|floatformat:2 }}</td>
+    <td>
+        <a href="{% url 'expense-create' %}">Add expense</a>
+        <a href="{% url 'expense-list' %}">expense list</a>
+    </td>
+</table>
 {% endblock content %}

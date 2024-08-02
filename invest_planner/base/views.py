@@ -1,8 +1,8 @@
 """
 Create Views for Base module
 """
-from django.http import HttpResponseBadRequest
 from django.db.models import Sum
+from decimal import Decimal
 from django.shortcuts import render
 from django.views import View
 from django.views.generic.list import ListView
@@ -16,6 +16,8 @@ from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
 from .forms import InvestmentForm
 from django.views import View
 from .utils import get_central_bank_rate
+from django.db.models import Case, When, Value, IntegerField
+from datetime import datetime
 
 # pylint: disable=too-many-ancestors
 
@@ -28,16 +30,35 @@ class InvestmentList(LoginRequiredMixin, ListView):
     context_object_name = 'investments'
 
     def get_queryset(self):
-        return Investment.objects.filter(user=self.request.user)
+        """
+        Returns investments filtered by the current user, ordered by
+        active status (active first) and then by starting_date (latest first).
+        """
+        queryset = Investment.objects.filter(user=self.request.user)
+        queryset = queryset.order_by(
+            Case(
+                When(active=True, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField()
+            ),
+            '-starting_date'
+        )
+
+        search_input = self.request.GET.get('search_box') or ''
+        if search_input:
+            queryset = queryset.filter(title__icontains=search_input)
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['count'] = self.get_queryset().filter(active=True).count()
         search_input = self.request.GET.get('search_box') or ''
-        if search_input:
-            context['investments'] = context['investments'].filter(
-                title__startswith=search_input)
         context['search_input'] = search_input
+
+        total_investment_value = Investment.objects.aggregate(Sum('starting_amount'))[
+            'starting_amount__sum'] or 0
+        context['total_investment_value'] = total_investment_value
 
         monthly_income = Income.objects.aggregate(Sum('monthly_income'))[
             'monthly_income__sum'] or 0
@@ -46,6 +67,7 @@ class InvestmentList(LoginRequiredMixin, ListView):
         monthly_expense = Expense.objects.aggregate(Sum('monthly_expense'))[
             'monthly_expense__sum'] or 0
         context['monthly_expense'] = monthly_expense
+
         return context
 
 
@@ -59,14 +81,53 @@ class InvestmentDetail(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         investment = self.get_object()
+
         number_of_years = getattr(investment, 'number_of_years', 0)
-        starting_amount = getattr(investment, 'starting_amount', 0)
-        return_rate = getattr(investment, 'return_rate', 0)
+        starting_amount = getattr(
+            investment, 'starting_amount', Decimal('0.00'))
+        return_rate = getattr(investment, 'return_rate', Decimal('0.00'))
+        rate_percentage = getattr(
+            investment, 'rate_percentage', Decimal('0.00'))
+        rate_value = getattr(investment, 'rate_value', Decimal('0.00'))
+        additional_contribution = getattr(
+            investment, 'additional_contribution', Decimal('0.00'))
+        starting_date = getattr(
+            investment, 'starting_date', datetime.today().date())
 
-        total_result = starting_amount * \
-            (1 + return_rate/100) ** number_of_years
+        months = []
+        total_amount = starting_amount
+        current_date = starting_date
 
-        context['total_result'] = round(total_result, 2)
+        for _ in range(number_of_years * 12):
+            fixed_return = total_amount * return_rate / \
+                Decimal('100') / Decimal('12')
+
+            if getattr(investment, 'rate_type') and rate_percentage and rate_value:
+                variable_return = total_amount * \
+                    (rate_value * rate_percentage / Decimal('100')) / \
+                    Decimal('100') / Decimal('12')
+            else:
+                variable_return = Decimal('0.00')
+
+            total_monthly_income = fixed_return + variable_return + additional_contribution
+            total_amount += total_monthly_income
+
+            months.append({
+                'date': current_date,
+                'monthly_income': round(total_monthly_income, 2),
+                'total_value': round(total_amount, 2),
+            })
+
+            if current_date.month == 12:
+                current_date = current_date.replace(
+                    year=current_date.year + 1, month=1)
+            else:
+                current_date = current_date.replace(
+                    month=current_date.month + 1)
+
+        context['months'] = months
+        context['total_result'] = round(total_amount, 2)
+
         return context
 
 
@@ -96,6 +157,7 @@ class InvestmentUpdate(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context.update(get_central_bank_rate())
         return context
+
 
 class InvestmentDelete(LoginRequiredMixin, DeleteView):
     """
@@ -133,9 +195,6 @@ class IncomeList(LoginRequiredMixin, ListView):
             context['incomes'] = context['incomes'].filter(
                 title__startswith=search_input)
         context['search_input'] = search_input
-
-        # monthly_income = Income.objects.aggregate(Sum('monthly_income'))['monthly_income__sum'] or 0
-        # context['monthly_income'] = monthly_income
 
         return context
 
@@ -194,9 +253,6 @@ class ExpenseList(LoginRequiredMixin, ListView):
                 title__startswith=search_input)
         context['search_input'] = search_input
 
-        # monthly_expense = expense.objects.aggregate(Sum('monthly_expense'))['monthly_expense__sum'] or 0
-        # context['monthly_expense'] = monthly_expense
-
         return context
 
 
@@ -237,13 +293,6 @@ class ExpenseDelete(LoginRequiredMixin, DeleteView):
 
 
 class TagListView(ListView):
-
-    # def get_queryset(self):
-    #     return {
-    #         'investment_tags': InvestmentTag.objects.all(),
-    #         'income_tags': IncomeTag.objects.all(),
-    #         'expense_tags': ExpenseTag.objects.all()
-    #     }
     """
     tags view 
     """

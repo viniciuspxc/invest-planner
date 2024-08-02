@@ -46,7 +46,7 @@ class Investment(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True)
 
-    title = models.CharField(max_length=100, blank=True)
+    title = models.CharField(max_length=100, blank=True, default="inv")
     starting_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
     number_of_years = models.IntegerField(default=0)
@@ -54,17 +54,44 @@ class Investment(models.Model):
         max_digits=10, decimal_places=2, default=Decimal(0.00))
     additional_contribution = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal(0.00))
+    rate_type = models.CharField(
+        max_length=5, blank=True, null=True)
+    rate_value = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, default=Decimal(0.00))
+    rate_percentage = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, default=Decimal(0.00))
     active = models.BooleanField(default=True)
     starting_date = models.DateField(default=date.today)
     tags = models.ManyToManyField(
         InvestmentTag, related_name='investments', blank=True)
-    rate_type = models.CharField(
-        max_length=5, blank=True, null=True)
-    rate_percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} ({self.starting_amount})"
+
+    def calculate_monthly_income(self):
+        """
+        Calcula o ganho mensal com base no return_rate e rate_percentage.
+        """
+
+        starting_amount = self.starting_amount
+        return_rate = self.return_rate
+        rate_percentage = self.rate_percentage
+        rate_value = self.rate_value
+
+        fixed_return = starting_amount * return_rate / Decimal('100')
+
+        if self.rate_type == 'CDI':
+            variable_return = starting_amount * \
+                (rate_value * rate_percentage / Decimal('100')) / Decimal('100')
+        elif self.rate_type == 'SELIC':
+            variable_return = starting_amount * \
+                (rate_value * rate_percentage / Decimal('100')) / Decimal('100')
+        else:
+            variable_return = Decimal('0.00')
+
+        total_monthly_income = fixed_return + \
+            variable_return + self.additional_contribution
+        return total_monthly_income
 
 
 class Income(models.Model):
