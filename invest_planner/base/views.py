@@ -13,10 +13,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Investment, Income, Expense, Tag
 from .models import InvestmentTag, IncomeTag, ExpenseTag
 from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
-import requests
 from .forms import InvestmentForm
 from django.views import View
-from django.core.cache import cache
+from .utils import get_central_bank_rate
 
 # pylint: disable=too-many-ancestors
 
@@ -72,31 +71,31 @@ class InvestmentDetail(LoginRequiredMixin, DetailView):
 
 
 class InvestmentCreate(LoginRequiredMixin, CreateView):
-    """
-    View to form for investment creation
-    """
     model = Investment
     template_name = 'base/investment_create.html'
     form_class = InvestmentForm
     success_url = reverse_lazy('investments')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(get_central_bank_rate())
+        return context
+
     def form_valid(self, form):
-        """
-        Validade form and allow creation
-        """
         form.instance.user = self.request.user
         return super().form_valid(form)
 
 
 class InvestmentUpdate(LoginRequiredMixin, UpdateView):
-    """
-    View for editing investments
-    """
     model = Investment
     template_name = 'base/investment_create.html'
     form_class = InvestmentForm
     success_url = reverse_lazy('investments')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(get_central_bank_rate())
+        return context
 
 class InvestmentDelete(LoginRequiredMixin, DeleteView):
     """
@@ -329,39 +328,7 @@ class ExpenseTagDeleteView(DeleteView):
     success_url = reverse_lazy('tag-list')
 
 
-def get_central_bank_rate():
-    url_cdi = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json"
-    response_cdi = requests.get(url_cdi)
-
-    if response_cdi.status_code == 200:
-        cdi_data = response_cdi.json()
-        if cdi_data:
-            cdi_rate = cdi_data[-1]['valor']
-            cdi_date = cdi_data[-1]['data']
-            cache.set('cdi_rate', cdi_rate, timeout=3600)
-            cache.set('cdi_date', cdi_date, timeout=3600)
-
-    url_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/1?formato=json"
-    response_selic = requests.get(url_selic)
-    if response_selic.status_code == 200:
-        selic_data = response_selic.json()
-        if selic_data:
-            selic_rate = selic_data[-1]['valor']
-            selic_date = selic_data[-1]['data']
-            cache.set('selic_rate', selic_rate, timeout=3600)
-            cache.set('selic_date', selic_date, timeout=3600)
-
-    context = {
-        'selic_rate': selic_rate,
-        'selic_date': selic_date,
-        'cdi_rate': cdi_rate,
-        'cdi_date': cdi_date,
-    }
-    return context
-
-
 class InvestmentRatesView(View):
     def get(self, request):
         context = get_central_bank_rate()
-
         return render(request, 'base/investment_rates.html', context)

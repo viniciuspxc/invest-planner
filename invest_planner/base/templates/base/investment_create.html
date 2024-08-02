@@ -1,10 +1,39 @@
 {% extends 'base/base.html' %}
+
 {% block content %}
-<h1>{% if form.instance.pk %}Edit Investment{% else %}Investment Creation{% endif %}</h1>
-<a href="{% url 'investments' %}">Go Back</a>
+<h1>{% if form.instance.pk %}Edit Investment{% else %}Create Investment{% endif %}</h1>
+<a href="javascript:history.back()">Go Back</a>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" name="action" value="{% if form.instance.pk %}Edit{% else %}Add{% endif %}">
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rateTypeField = document.querySelector('select[name="rate_type"]');
+    const ratePercentageField = document.querySelector('input[name="rate_percentage"]');
+
+    const rates = {
+        {% for tax in taxes %}
+            '{{ tax.name }}': {{ tax.rate }},
+        {% endfor %}
+    };
+
+    function updateRatePercentage() {
+        const selectedRateType = rateTypeField.value;
+        if (selectedRateType in rates) {
+            ratePercentageField.value = rates[selectedRateType];
+            ratePercentageField.removeAttribute('readonly');
+        } else {
+            ratePercentageField.value = '0';
+            ratePercentageField.setAttribute('readonly', 'readonly');
+        }
+    }
+
+    rateTypeField.addEventListener('change', updateRatePercentage);
+    
+    updateRatePercentage();
+});
+</script>
 {% endblock %}

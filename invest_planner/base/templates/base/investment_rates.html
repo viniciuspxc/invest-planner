@@ -1,9 +1,20 @@
+
 {% extends 'base/base.html' %}
 
 {% block content %}
-<h1>Taxas de Investimento</h1>
-<p>selic: {{ selic_rate }}%</p>
-<p>selic date: {{ selic_date }}</p>
-<p>cdi: {{ cdi_rate }}%</p>
-<p>cdi date: {{ cdi_date }}</p>
+<h1>Investment Rates</h1>
+<table>
+    <tr>
+        <th>Tax Name</th>
+        <th>Rate(%)</th>
+        <th>Date</th>
+    </tr>
+    {% for tax in taxes %}
+    <tr>
+        <td>{{ tax.name }}</td>
+        <td>{{ tax.rate }}</td>
+        <td>{{ tax.date }}</td>
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}
