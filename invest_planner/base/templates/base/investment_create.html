@@ -6,59 +6,34 @@
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <div>
-        <label for="id_investment_type">Tipo de Investimento</label>
-        {{ form.investment_type }}
-    </div>
-    <div id="return_rate_field">
-        <label for="id_return_rate">Return Rate</label>
-        {{ form.return_rate }}
-    </div>
-    <div id="rate-options" style="display: none;">
-        <label for="id_rate_type">Tipo de Taxa (para pós-fixado)</label>
-        {{ form.rate_type }}
-        <label for="id_rate_percentage">Porcentagem da Taxa</label>
-        {{ form.rate_percentage }}
-    </div>
     <input type="submit" name="action" value="{% if form.instance.pk %}Edit{% else %}Add{% endif %}">
 </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const investmentTypeField = document.querySelector('select[name="investment_type"]');
-    const rateOptionsDiv = document.getElementById('rate-options');
-    const returnRateField = document.getElementById('return_rate_field');
     const rateTypeField = document.querySelector('select[name="rate_type"]');
     const ratePercentageField = document.querySelector('input[name="rate_percentage"]');
 
-    const cdiRate = {{ taxes.0.rate }};
-    const selicRate = {{ taxes.1.rate }};
-
-    function toggleRateOptions() {
-        if (investmentTypeField.value === 'pos') {
-            rateOptionsDiv.style.display = 'block';
-            returnRateField.style.display = 'none';
-        } else {
-            rateOptionsDiv.style.display = 'none';
-            returnRateField.style.display = 'block';
-        }
-    }
+    const rates = {
+        {% for tax in taxes %}
+            '{{ tax.name }}': {{ tax.rate }},
+        {% endfor %}
+    };
 
     function updateRatePercentage() {
-        if (rateTypeField.value === 'cdi') {
-            ratePercentageField.value = cdiRate;
-        } else if (rateTypeField.value === 'selic') {
-            ratePercentageField.value = selicRate;
+        const selectedRateType = rateTypeField.value;
+        if (selectedRateType in rates) {
+            ratePercentageField.value = rates[selectedRateType];
+            ratePercentageField.removeAttribute('readonly');
         } else {
-            ratePercentageField.value = '';
+            ratePercentageField.value = '0';
+            ratePercentageField.setAttribute('readonly', 'readonly');
         }
     }
 
-    investmentTypeField.addEventListener('change', toggleRateOptions);
     rateTypeField.addEventListener('change', updateRatePercentage);
     
-    toggleRateOptions();  // Inicializa com o estado correto
-    updateRatePercentage();  // Inicializa com o valor correto
+    updateRatePercentage();
 });
 </script>
 {% endblock %}

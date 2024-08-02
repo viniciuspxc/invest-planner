@@ -13,10 +13,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Investment, Income, Expense, Tag
 from .models import InvestmentTag, IncomeTag, ExpenseTag
 from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
-import requests
 from .forms import InvestmentForm
 from django.views import View
-from django.core.cache import cache
+from .utils import get_central_bank_rate
 
 # pylint: disable=too-many-ancestors
 
@@ -72,9 +71,6 @@ class InvestmentDetail(LoginRequiredMixin, DetailView):
 
 
 class InvestmentCreate(LoginRequiredMixin, CreateView):
-    """
-    View to form for investment creation
-    """
     model = Investment
     template_name = 'base/investment_create.html'
     form_class = InvestmentForm
@@ -86,17 +82,11 @@ class InvestmentCreate(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """
-        Validade form and allow creation
-        """
         form.instance.user = self.request.user
         return super().form_valid(form)
 
 
 class InvestmentUpdate(LoginRequiredMixin, UpdateView):
-    """
-    View for editing investments
-    """
     model = Investment
     template_name = 'base/investment_create.html'
     form_class = InvestmentForm
@@ -106,7 +96,6 @@ class InvestmentUpdate(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context.update(get_central_bank_rate())
         return context
-
 
 class InvestmentDelete(LoginRequiredMixin, DeleteView):
     """
@@ -337,44 +326,6 @@ class ExpenseTagDeleteView(DeleteView):
     model = ExpenseTag
     template_name = 'tags/tag_confirm_delete.html'
     success_url = reverse_lazy('tag-list')
-
-
-def get_central_bank_rate():
-    # URLs das taxas
-    url_cdi = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json"
-    url_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/1?formato=json"
-
-    # Função para obter a taxa do Banco Central
-    def fetch_rate(url, cache_key_rate, cache_key_date):
-        rate, date = None, None
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            if data:
-                rate = data[-1]['valor']
-                date = data[-1]['data']
-                # Cache por 1 dia
-                cache.set(cache_key_rate, rate, timeout=86400)
-                cache.set(cache_key_date, date, timeout=86400)
-        return rate, date
-
-    # Obter as taxas e datas do cache ou da API
-    cdi_rate, cdi_date = cache.get('cdi_rate'), cache.get('cdi_date')
-    if cdi_rate is None or cdi_date is None:
-        cdi_rate, cdi_date = fetch_rate(url_cdi, 'cdi_rate', 'cdi_date')
-
-    selic_rate, selic_date = cache.get('selic_rate'), cache.get('selic_date')
-    if selic_rate is None or selic_date is None:
-        selic_rate, selic_date = fetch_rate(
-            url_selic, 'selic_rate', 'selic_date')
-
-    context = {
-        'taxes': [
-            {'name': 'CDI', 'rate': cdi_rate, 'date': cdi_date},
-            {'name': 'SELIC', 'rate': selic_rate, 'date': selic_date}
-        ]
-    }
-    return context
 
 
 class InvestmentRatesView(View):
