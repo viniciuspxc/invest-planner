@@ -1,16 +1,30 @@
+"""
+Funções adicionais do programa
+"""
 import requests
 from django.core.cache import cache
 
 
 def get_central_bank_rate():
+    """Recebe os dados da API do banco central
+
+    Returns:
+        dict[str, list[dict[str, Unknown]]]: context
+    """
     # URLs das taxas
     url_cdi = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json"
     url_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/1?formato=json"
 
     # Função para obter a taxa do Banco Central
     def fetch_rate(url, cache_key_rate, cache_key_date):
+        """Executa as chamadas http
+        """
         rate, date = None, None
-        response = requests.get(url)
+        try:
+            response = requests.get(url, timeout=10)
+        except requests.exceptions.Timeout:
+            print("Timed out")
+
         if response.status_code == 200:
             data = response.json()
             if data:

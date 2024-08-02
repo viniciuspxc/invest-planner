@@ -1,8 +1,9 @@
 """
 Create Views for Base module
 """
-from django.db.models import Sum
 from decimal import Decimal
+from datetime import datetime
+from django.db.models import Sum
 from django.shortcuts import render
 from django.views import View
 from django.views.generic.list import ListView
@@ -10,14 +11,12 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Case, When, Value, IntegerField
 from .models import Investment, Income, Expense, Tag
 from .models import InvestmentTag, IncomeTag, ExpenseTag
 from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
 from .forms import InvestmentForm
-from django.views import View
 from .utils import get_central_bank_rate
-from django.db.models import Case, When, Value, IntegerField
-from datetime import datetime
 
 # pylint: disable=too-many-ancestors
 
@@ -82,23 +81,17 @@ class InvestmentDetail(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         investment = self.get_object()
 
-        number_of_years = getattr(investment, 'number_of_years', 0)
-        starting_amount = getattr(
-            investment, 'starting_amount', Decimal('0.00'))
         return_rate = getattr(investment, 'return_rate', Decimal('0.00'))
         rate_percentage = getattr(
             investment, 'rate_percentage', Decimal('0.00'))
         rate_value = getattr(investment, 'rate_value', Decimal('0.00'))
-        additional_contribution = getattr(
-            investment, 'additional_contribution', Decimal('0.00'))
-        starting_date = getattr(
-            investment, 'starting_date', datetime.today().date())
 
         months = []
-        total_amount = starting_amount
-        current_date = starting_date
+        total_amount = getattr(investment, 'starting_amount', Decimal('0.00'))
+        current_date = getattr(
+            investment, 'starting_date', datetime.today().date()).replace(day=1)
 
-        for _ in range(number_of_years * 12):
+        for _ in range(getattr(investment, 'number_of_years', 0) * 12):
             fixed_return = total_amount * return_rate / \
                 Decimal('100') / Decimal('12')
 
@@ -109,7 +102,8 @@ class InvestmentDetail(LoginRequiredMixin, DetailView):
             else:
                 variable_return = Decimal('0.00')
 
-            total_monthly_income = fixed_return + variable_return + additional_contribution
+            total_monthly_income = fixed_return + variable_return + getattr(
+                investment, 'additional_contribution', Decimal('0.00'))
             total_amount += total_monthly_income
 
             months.append({
@@ -118,7 +112,7 @@ class InvestmentDetail(LoginRequiredMixin, DetailView):
                 'total_value': round(total_amount, 2),
             })
 
-            if current_date.month == 12:
+            if current_date.month >= 12:
                 current_date = current_date.replace(
                     year=current_date.year + 1, month=1)
             else:
@@ -143,6 +137,9 @@ class InvestmentCreate(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
+        """
+        Valida o formulário
+        """
         form.instance.user = self.request.user
         return super().form_valid(form)
 
@@ -158,6 +155,13 @@ class InvestmentUpdate(LoginRequiredMixin, UpdateView):
         context.update(get_central_bank_rate())
         return context
 
+    def form_valid(self, form):
+        """
+        Valida o formulário
+        """
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
 
 class InvestmentDelete(LoginRequiredMixin, DeleteView):
     """
@@ -166,16 +170,6 @@ class InvestmentDelete(LoginRequiredMixin, DeleteView):
     model = Investment
     context_object_name = 'investment'
     success_url = reverse_lazy('investments')
-
-
-class InvestmentResults:
-    """
-    Represents the results of an investment calculation.
-    """
-
-    def __init__(self, total_result, yearly_results):
-        self.total_result = total_result
-        self.yearly_results = yearly_results
 
 
 class IncomeList(LoginRequiredMixin, ListView):

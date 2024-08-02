@@ -1,14 +1,16 @@
 """
 Base App Forms
 """
+from datetime import date
 from django import forms
 from .models import InvestmentTag, IncomeTag, ExpenseTag
 from .models import Investment
 from .utils import get_central_bank_rate
-from datetime import date
 
 
 class InvestmentForm(forms.ModelForm):
+    """Formulário para cofigurar o cadastro de investimentos
+    """
     starting_date = forms.DateField(
         widget=forms.DateInput(
             attrs={
@@ -27,7 +29,7 @@ class InvestmentForm(forms.ModelForm):
                   'additional_contribution', 'active', 'starting_date', 'tags']
 
     def __init__(self, *args, **kwargs):
-        super(InvestmentForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         central_bank_rates = get_central_bank_rate()
         rate_choices = [(tax['name'], f"{tax['name'].upper()} ({
                          tax['rate']}%)") for tax in central_bank_rates['taxes']
@@ -38,18 +40,24 @@ class InvestmentForm(forms.ModelForm):
 
 
 class InvestmentTagForm(forms.ModelForm):
+    """Formulário para tags de investimento
+    """
     class Meta:
         model = InvestmentTag
         fields = ['name']
 
 
 class IncomeTagForm(forms.ModelForm):
+    """Formulário para tags de ganhos
+    """
     class Meta:
         model = IncomeTag
         fields = ['name']
 
 
 class ExpenseTagForm(forms.ModelForm):
+    """Formulário para tags de gastos
+    """
     class Meta:
         model = ExpenseTag
         fields = ['name']
