@@ -31,9 +31,7 @@ class InvestmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         central_bank_rates = get_central_bank_rate()
-        rate_choices = [(tax['name'], f"{tax['name'].upper()} ({
-                         tax['rate']}%)") for tax in central_bank_rates['taxes']
-                        ]
+        rate_choices = [(tax['name'], f" {tax['name'].upper()} {tax['rate']}%") for tax in central_bank_rates['taxes']]
         self.fields['rate_type'].choices += rate_choices
         self.fields['rate_value'].widget.attrs['readonly'] = False
         self.fields['rate_percentage'].widget.attrs['readonly'] = False

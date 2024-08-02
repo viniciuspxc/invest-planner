@@ -21,7 +21,7 @@ def get_central_bank_rate():
         """
         rate, date = None, None
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=20)
         except requests.exceptions.Timeout:
             print("Timed out")
 
