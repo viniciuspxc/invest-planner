@@ -5,6 +5,7 @@ from datetime import date
 from decimal import Decimal
 from django.db import models
 from django.contrib.auth import get_user_model
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -66,6 +67,10 @@ class Investment(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.starting_amount})"
+
+    def calculate_end_date(self):
+        end_date = self.starting_date + timedelta(days=365*self.number_of_years)
+        return end_date
 
     def calculate_monthly_income(self):
         """

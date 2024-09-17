@@ -3,7 +3,7 @@ Create Views for Base module
 """
 from decimal import Decimal
 from datetime import datetime
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.shortcuts import render
 from django.views import View
 from django.views.generic.list import ListView
@@ -23,7 +23,7 @@ from .utils import get_central_bank_rate
 
 class InvestmentList(LoginRequiredMixin, ListView):
     """
-    Main View: list of investments 
+    Main View: list of investments
     """
     model = Investment
     context_object_name = 'investments'
@@ -45,8 +45,10 @@ class InvestmentList(LoginRequiredMixin, ListView):
 
         search_input = self.request.GET.get('search_box') or ''
         if search_input:
-            queryset = queryset.filter(title__icontains=search_input)
-
+            queryset = queryset.filter(
+                Q(title__icontains=search_input) | Q(
+                    tags__name__icontains=search_input)
+            ).distinct()
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -55,17 +57,21 @@ class InvestmentList(LoginRequiredMixin, ListView):
         search_input = self.request.GET.get('search_box') or ''
         context['search_input'] = search_input
 
-        total_investment_value = Investment.objects.aggregate(Sum('starting_amount'))[
-            'starting_amount__sum'] or 0
+        total_investment_value = Investment.objects.filter(user=self.request.user).aggregate(
+            Sum('starting_amount'))['starting_amount__sum'] or 0
         context['total_investment_value'] = total_investment_value
 
-        monthly_income = Income.objects.aggregate(Sum('monthly_income'))[
-            'monthly_income__sum'] or 0
+        monthly_income = Income.objects.filter(user=self.request.user).aggregate(
+            Sum('monthly_income'))['monthly_income__sum'] or 0
         context['monthly_income'] = monthly_income
 
-        monthly_expense = Expense.objects.aggregate(Sum('monthly_expense'))[
-            'monthly_expense__sum'] or 0
+        monthly_expense = Expense.objects.filter(user=self.request.user).aggregate(
+            Sum('monthly_expense'))['monthly_expense__sum'] or 0
         context['monthly_expense'] = monthly_expense
+
+        for investment in context['investments']:
+            investment.total_monthly_income = investment.calculate_monthly_income()
+            investment.end_date = investment.calculate_end_date()
 
         return context
 

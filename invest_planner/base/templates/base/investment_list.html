@@ -3,8 +3,10 @@
 <h1>Homepage</h1>
 
 <table>
-    <td>Total Investment Value: &nbsp;</td>
-    <td>R$ {{ total_investment_value|floatformat:2 }}</td>
+    <tr>
+        <td>Total Investment Value: &nbsp;</td>
+        <td>R$ {{ total_investment_value|floatformat:2 }}</td>
+    </tr>
 </table>
 
 <h2>Investments:</h2>
@@ -16,21 +18,33 @@
 <table>
     <thead>
         <tr>
-            <th> Title </th>
-            <th> Starting Amount </th>
-            <th> Status </th>
-            <th> Actions </th>
+            <th>Title</th>
+            <th>Starting Date</th>
+            <th>Ending Date</th>
+            <th>Starting Amount</th>
+            <th>Current Amount</th>
+            <th>Status</th>
+            <th>Tags</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for investment in investments %}
         <tr {% if investment.active %} style="color: white;" {% else %} style="color: gray;" {% endif %}>
             <td>{{ investment.title }}</td>
+            <td>{{ investment.starting_date }}</td>
+            <td>{{ investment.end_date }}</td>
             <td>{{ investment.starting_amount }}</td>
+            <td>R$ {{ investment.total_monthly_income }} </td>
             <td>
                 {% if investment.active %} active
                 {% else %} inactive
                 {% endif %}
+            </td>
+            <td>
+                {% for tag in investment.tags.all %}
+                {{ tag.name }} {% if not forloop.last %}, {% endif %}
+                {% endfor %}
             </td>
             <td>
                 <a href="{% url 'investment' investment.id %}">View</a> |
@@ -40,27 +54,41 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4">No items in list</td>
+            <td colspan="8">No items in list</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
 <table>
     <h2>Income:</h2>
-    <td>Total: </td>
-    <td>R$ {{ monthly_income|floatformat:2 }}</td>
-    <td>
-        <a href="{% url 'income-create' %}">Add income</a>
-        <a href="{% url 'income-list' %}">income list</a>
-    </td>
+    <tr>
+        <td>Total: </td>
+        <td>R$ {{ monthly_income|floatformat:2 }}</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="{% url 'income-create' %}">Add income</a>
+        </td>
+        <td>
+            <a href="{% url 'income-list' %}">Income list</a>
+        </td>
+    </tr>
 </table>
+
 <table>
-    <h2>expense:</h2>
-    <td>Total: </td>
-    <td>R$ {{ monthly_expense|floatformat:2 }}</td>
-    <td>
-        <a href="{% url 'expense-create' %}">Add expense</a>
-        <a href="{% url 'expense-list' %}">expense list</a>
-    </td>
+    <h2>Expense:</h2>
+    <tr>
+        <td>Total: </td>
+        <td>R$ {{ monthly_expense|floatformat:2 }}</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="{% url 'expense-create' %}">Add expense</a>
+        </td>
+        <td>
+            <a href="{% url 'expense-list' %}">Expense list</a>
+        </td>
+    </tr>
 </table>
 {% endblock content %}
