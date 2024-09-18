@@ -1,10 +1,13 @@
 """
 Create Views for Base module
 """
+from .utils import GPT4AllChatModelStrategy
+from .utils import GROQChatModelStrategy
+from .utils import get_user_data  # Certifique-se de que o caminho está correto
+from .utils import get_user_data
+from .utils import get_user_data  # Função para obter os dados do usuário
 from django.shortcuts import redirect, get_object_or_404
 from .models import Notification
-from decouple import config
-from groq import Groq
 from .models import Investment, Income, Expense
 import json
 from django.http import JsonResponse
@@ -397,64 +400,36 @@ def UserDataView(request):
     return render(request, 'base/summarize.html', {'customer_data': json.dumps(customer_data, indent=4)})
 
 
-GROQ_API_KEY = config('GROQ_API_KEY')
-client = Groq(api_key=GROQ_API_KEY)  # type: ignore
+groq_strategy = GROQChatModelStrategy()
+gpt4all_strategy = GPT4AllChatModelStrategy()
 
 
-def chat_with_assistant(message, user):
+def chat_with_assistant(message, user, model_name):
     json_data = get_user_data(user)
-
     try:
-        completion = client.chat.completions.create(
-            model="llama3-groq-70b-8192-tool-use-preview",
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"User data is in the json: {json_data}; Don't use formulas or codes; Calculate the values if asked; Use less than 100 words; Make sure calculations are correct"
-                },
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ],
-            temperature=0.2,
-            max_tokens=200,
-            top_p=0.65,
-            stream=False,
-            stop=None,
-        )
-
-        # Acesso ao conteúdo da resposta com base na documentação
-        if hasattr(completion, 'choices') and len(completion.choices) > 0:
-            # Assumindo que `message` está disponível diretamente no objeto
-            response_message = completion.choices[0].message
-            if hasattr(response_message, 'content'):
-                return response_message.content
-            else:
-                return "Content not found in response."
+        if model_name == "gpt4all":
+            bot_response = gpt4all_strategy.get_response(message, json_data)
         else:
-            return "No choices available in response."
-
+            bot_response = groq_strategy.get_response(message, json_data)
+        return bot_response
     except Exception as e:
-        # Lidar com erros e exceções
         return f"An error occurred: {str(e)}"
 
 
-# View para o chatbot
 def chatbot_view(request):
     user = request.user
     if request.method == 'POST':
         user_message = request.POST.get('message')
-        bot_response = chat_with_assistant(user_message, user)
+        selected_model = request.POST.get('model', 'groq')  # Default to 'groq'
+        bot_response = chat_with_assistant(user_message, user, selected_model)
         return JsonResponse({'response': bot_response})
     return render(request, 'base/chatbot.html')
 
 
 def notifications_view(request):
-    # Recupera notificações não lidas e lidas para o usuário autenticado
     notifications_unread = Notification.objects.filter(
         user=request.user, is_read=False).order_by('-date_created')
-    
+
     notifications_read = Notification.objects.filter(
         user=request.user, is_read=True).order_by('-date_created')
 
@@ -462,10 +437,11 @@ def notifications_view(request):
         'notifications_unread': notifications_unread,
         'notifications_read': notifications_read
     })
-    
+
 
 def mark_as_read(request, notification_id):
-    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification = get_object_or_404(
+        Notification, id=notification_id, user=request.user)
     notification.is_read = True
     notification.save()
-    return redirect('notifications')  # Redireciona de volta para a página de notificações
+    return redirect('notifications')
