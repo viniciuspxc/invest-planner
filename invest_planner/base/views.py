@@ -5,7 +5,6 @@ from decouple import config
 from groq import Groq
 from .models import Investment, Income, Expense
 import json
-import openai
 from django.http import JsonResponse
 from decimal import Decimal
 from datetime import date, datetime
