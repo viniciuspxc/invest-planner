@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+{% extends 'base/base.html' %}
+
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Assistente</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chat-container {
+            width: 80%;
+            margin: 0 auto;
+            padding-top: 50px;
+        }
+        .chat-box {
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 20px;
+            height: 300px;
+            overflow-y: scroll;
+        }
+        .input-container {
+            margin-top: 20px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <h1>Assistente Virtual</h1>
+
+    <div class="chat-box" id="chat-box">
+        <!-- As mensagens do chat aparecerão aqui -->
+    </div>
+
+    <div class="input-container">
+        <input type="text" id="user-message" placeholder="Digite sua mensagem..." />
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+</div>
+
+<script>
+    function sendMessage() {
+        var userMessage = $('#user-message').val();
+        if (userMessage.trim() === "") {
+            alert("Digite uma mensagem.");
+            return;
+        }
+
+        // Adicionar a mensagem do usuário ao chat
+        $('#chat-box').append('<p><strong>You:</strong> ' + userMessage + '</p>');
+
+        // Limpar a caixa de entrada
+        $('#user-message').val('');
+
+        // Enviar a mensagem para o servidor
+        $.ajax({
+            url: "{% url 'chatbot' %}",
+            type: 'POST',
+            data: {
+                'message': userMessage,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                // Adicionar a resposta do bot ao chat
+                $('#chat-box').append('<p><strong>AI Assistant:</strong> ' + response.response + '</p>');
+            },
+            error: function(error) {
+                alert("Ocorreu um erro. Tente novamente.");
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
+{% endblock content %}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+{% extends 'base/base.html' %}
+
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USER JSON</title>
+    <style>
+        pre {
+            background-color: #000000;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>USER JSON</h1>
+
+    <pre>{{ customer_data }}</pre>
+</body>
+</html>
+{% endblock content %}

@@ -69,7 +69,8 @@ class Investment(models.Model):
         return f"{self.title} ({self.starting_amount})"
 
     def calculate_end_date(self):
-        end_date = self.starting_date + timedelta(days=365*self.number_of_years)
+        end_date = self.starting_date + \
+            timedelta(days=365*self.number_of_years)
         return end_date
 
     def calculate_monthly_income(self):
@@ -81,7 +82,6 @@ class Investment(models.Model):
         return_rate = self.return_rate
         rate_percentage = self.rate_percentage
         rate_value = self.rate_value
-
         fixed_return = starting_amount * return_rate / Decimal('100')
 
         if self.rate_type == 'CDI':

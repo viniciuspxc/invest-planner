@@ -3,6 +3,7 @@ Funções adicionais do programa
 """
 import requests
 from django.core.cache import cache
+from .models import Investment, Income, Expense
 
 
 def get_central_bank_rate():
@@ -11,11 +12,9 @@ def get_central_bank_rate():
     Returns:
         dict[str, list[dict[str, Unknown]]]: context
     """
-    # URLs das taxas
     url_cdi = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json"
     url_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados/ultimos/1?formato=json"
 
-    # Função para obter a taxa do Banco Central
     def fetch_rate(url, cache_key_rate, cache_key_date):
         """Executa as chamadas http
         """
@@ -30,12 +29,10 @@ def get_central_bank_rate():
             if data:
                 rate = data[-1]['valor']
                 date = data[-1]['data']
-                # Cache por 1 dia
                 cache.set(cache_key_rate, rate, timeout=86400)
                 cache.set(cache_key_date, date, timeout=86400)
         return rate, date
 
-    # Obter as taxas e datas do cache ou da API
     cdi_rate, cdi_date = cache.get('cdi_rate'), cache.get('cdi_date')
     if cdi_rate is None or cdi_date is None:
         cdi_rate, cdi_date = fetch_rate(url_cdi, 'cdi_rate', 'cdi_date')
@@ -52,3 +49,48 @@ def get_central_bank_rate():
         ]
     }
     return context
+
+
+def get_user_data(user):
+    customer_data = {
+        # "name": user.username,
+        # "email": user.email,
+        "investments": [],
+        "income": [],
+        "expenses": []
+    }
+
+    investments = Investment.objects.filter(user=user)
+    for investment in investments:
+        customer_data["investments"].append({
+            "title": investment.title,
+            "starting_amount": float(investment.starting_amount),
+            "number_of_years": str(investment.number_of_years),
+            "return_rate": float(investment.return_rate),
+            "additional_contribution": float(investment.additional_contribution),
+            "rate_type": str(investment.rate_type),
+            "rate_value": float(investment.rate_value),
+            "rate_percentage": float(investment.rate_percentage),
+            "active": bool(investment.active),
+            "starting_date": str(investment.starting_date),
+            "tags": [tag.name for tag in investment.tags.all()],
+            
+        })
+
+    incomes = Income.objects.filter(user=user)
+    for income in incomes:
+        customer_data["income"].append({
+            "title": income.title,
+            "monthly_income": float(income.monthly_income),
+            "tags": [tag.name for tag in income.tags.all()]
+        })
+
+    expenses = Expense.objects.filter(user=user)
+    for expense in expenses:
+        customer_data["expenses"].append({
+            "title": expense.title,
+            "monthly_expense": float(expense.monthly_expense),
+            "tags": [tag.name for tag in expense.tags.all()]
+        })
+
+    return customer_data
