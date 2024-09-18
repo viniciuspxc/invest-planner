@@ -1,6 +1,8 @@
 """
 Create Views for Base module
 """
+from django.shortcuts import redirect, get_object_or_404
+from .models import Notification
 from decouple import config
 from groq import Groq
 from .models import Investment, Income, Expense
@@ -446,3 +448,24 @@ def chatbot_view(request):
         bot_response = chat_with_assistant(user_message, user)
         return JsonResponse({'response': bot_response})
     return render(request, 'base/chatbot.html')
+
+
+def notifications_view(request):
+    # Recupera notificações não lidas e lidas para o usuário autenticado
+    notifications_unread = Notification.objects.filter(
+        user=request.user, is_read=False).order_by('-date_created')
+    
+    notifications_read = Notification.objects.filter(
+        user=request.user, is_read=True).order_by('-date_created')
+
+    return render(request, 'base/notifications.html', {
+        'notifications_unread': notifications_unread,
+        'notifications_read': notifications_read
+    })
+    
+
+def mark_as_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect('notifications')  # Redireciona de volta para a página de notificações

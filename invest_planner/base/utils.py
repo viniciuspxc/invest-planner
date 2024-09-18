@@ -1,9 +1,14 @@
 """
 Funções adicionais do programa
 """
+from django.db.models.signals import post_save
+from datetime import date
+from .models import Investment, Notification
+from django.dispatch import receiver
 import requests
 from django.core.cache import cache
 from .models import Investment, Income, Expense
+from django.utils.timezone import now
 
 
 def get_central_bank_rate():
@@ -74,7 +79,7 @@ def get_user_data(user):
             "active": bool(investment.active),
             "starting_date": str(investment.starting_date),
             "tags": [tag.name for tag in investment.tags.all()],
-            
+
         })
 
     incomes = Income.objects.filter(user=user)
@@ -94,3 +99,27 @@ def get_user_data(user):
         })
 
     return customer_data
+
+
+@receiver(post_save, sender=Investment)
+def check_investment_end_date(sender, instance, **kwargs):
+    end_date = instance.calculate_end_date()
+
+    if end_date <= now().date():
+        Notification.objects.create(
+            user=instance.user,
+            message=f"Your investment '{
+                instance.title}' has reached its end date.",
+        )
+
+
+@receiver(post_save, sender=Investment)
+def notify_investment_change(sender, instance, **kwargs):
+    if kwargs.get('created', False):
+        message = f"Investment '{instance.title}' was created with amount {
+            instance.starting_amount}."
+    else:
+        message = f"Investment '{instance.title}' was updated with new amount {
+            instance.starting_amount}."
+
+    Notification.objects.create(user=instance.user, message=message)

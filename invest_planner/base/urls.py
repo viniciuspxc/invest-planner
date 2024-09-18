@@ -14,6 +14,7 @@ from .views import (
 )
 from .views import InvestmentRatesView
 from .views import UserDataView, chatbot_view
+from .views import notifications_view, mark_as_read
 
 urlpatterns = [
     path('', InvestmentList.as_view(), name='investments'),
@@ -66,4 +67,7 @@ urlpatterns = [
 
     path('summarize/', UserDataView, name='summarize'),
     path('chatbot/', chatbot_view, name='chatbot'),
+
+    path('notifications/', notifications_view, name='notifications'),
+    path('notifications/read/<int:notification_id>/', mark_as_read, name='mark_as_read'),
 ]
