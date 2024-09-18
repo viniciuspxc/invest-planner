@@ -1,8 +1,18 @@
 """
 Create Views for Base module
 """
+from .utils import GPT4AllChatModelStrategy
+from .utils import GROQChatModelStrategy
+from .utils import get_user_data  # Certifique-se de que o caminho está correto
+from .utils import get_user_data
+from .utils import get_user_data  # Função para obter os dados do usuário
+from django.shortcuts import redirect, get_object_or_404
+from .models import Notification
+from .models import Investment, Income, Expense
+import json
+from django.http import JsonResponse
 from decimal import Decimal
-from datetime import datetime
+from datetime import date, datetime
 from django.db.models import Q, Sum
 from django.shortcuts import render
 from django.views import View
@@ -16,7 +26,7 @@ from .models import Investment, Income, Expense, Tag
 from .models import InvestmentTag, IncomeTag, ExpenseTag
 from .forms import InvestmentTagForm, IncomeTagForm, ExpenseTagForm
 from .forms import InvestmentForm
-from .utils import get_central_bank_rate
+from .utils import get_central_bank_rate, get_user_data
 
 # pylint: disable=too-many-ancestors
 
@@ -381,3 +391,57 @@ class InvestmentRatesView(View):
     def get(self, request):
         context = get_central_bank_rate()
         return render(request, 'base/investment_rates.html', context)
+
+
+def UserDataView(request):
+    user = request.user
+    customer_data = get_user_data(user)
+
+    return render(request, 'base/summarize.html', {'customer_data': json.dumps(customer_data, indent=4)})
+
+
+groq_strategy = GROQChatModelStrategy()
+gpt4all_strategy = GPT4AllChatModelStrategy()
+
+
+def chat_with_assistant(message, user, model_name):
+    json_data = get_user_data(user)
+    try:
+        if model_name == "gpt4all":
+            bot_response = gpt4all_strategy.get_response(message, json_data)
+        else:
+            bot_response = groq_strategy.get_response(message, json_data)
+        return bot_response
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+
+
+def chatbot_view(request):
+    user = request.user
+    if request.method == 'POST':
+        user_message = request.POST.get('message')
+        selected_model = request.POST.get('model', 'groq')  # Default to 'groq'
+        bot_response = chat_with_assistant(user_message, user, selected_model)
+        return JsonResponse({'response': bot_response})
+    return render(request, 'base/chatbot.html')
+
+
+def notifications_view(request):
+    notifications_unread = Notification.objects.filter(
+        user=request.user, is_read=False).order_by('-date_created')
+
+    notifications_read = Notification.objects.filter(
+        user=request.user, is_read=True).order_by('-date_created')
+
+    return render(request, 'base/notifications.html', {
+        'notifications_unread': notifications_unread,
+        'notifications_read': notifications_read
+    })
+
+
+def mark_as_read(request, notification_id):
+    notification = get_object_or_404(
+        Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect('notifications')

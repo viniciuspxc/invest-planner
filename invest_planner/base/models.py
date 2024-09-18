@@ -1,6 +1,7 @@
 """
 Models for Base App module
 """
+from django.contrib.auth.models import User
 from datetime import date
 from decimal import Decimal
 from django.db import models
@@ -69,8 +70,12 @@ class Investment(models.Model):
         return f"{self.title} ({self.starting_amount})"
 
     def calculate_end_date(self):
-        end_date = self.starting_date + timedelta(days=365*self.number_of_years)
+        end_date = self.starting_date + \
+            timedelta(days=365*self.number_of_years)
         return end_date
+
+    def is_final_date_reached(self):
+        return date.today() >= self.calculate_end_date()
 
     def calculate_monthly_income(self):
         """
@@ -81,7 +86,6 @@ class Investment(models.Model):
         return_rate = self.return_rate
         rate_percentage = self.rate_percentage
         rate_value = self.rate_value
-
         fixed_return = starting_amount * return_rate / Decimal('100')
 
         if self.rate_type == 'CDI':
@@ -128,3 +132,13 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.monthly_expense})"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Notification for {self.user.username} on {self.date_created}"

@@ -1,0 +1,144 @@
+{% extends 'base/base.html' %}
+<!DOCTYPE html>
+
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chat-container {
+            width: 80%;
+            margin: 0 auto;
+            padding-top: 50px;
+        }
+        .chat-box {
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 20px;
+            height: 300px;
+            overflow-y: scroll;
+            background-color: black;
+            color: white;
+        }
+        .input-container {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+        }
+        input[type="text"] {
+            width: calc(100% - 120px);
+            padding: 10px;
+            font-size: 16px;
+            background-color: black;
+            color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #3b0fff;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #5e19ff;
+        }
+        .model-selector {
+            margin-bottom: 20px;
+            color: rgb(0, 0, 0);
+        }
+        .model-selector label {
+            margin-right: 10px;
+            font-size: 16px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <h1>AI Assistant</h1>
+
+    <div class="model-selector">
+        <label for="model-select">Choose a model:</label>
+        <select id="model-select">
+            <option value="groq">Groq Model</option>
+            <option value="gpt4all">GPT-4 All</option>
+        </select>
+    </div>
+
+    <div class="chat-box" id="chat-box">
+        <!-- Chat messages will appear here -->
+    </div>
+
+    <div class="input-container">
+        <input type="text" id="user-message" placeholder="Type your message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Send message when "Enter" is pressed
+        $('#user-message').keypress(function(event) {
+            if (event.which == 13) { // 13 is the Enter key
+                sendMessage();
+                event.preventDefault(); // Prevent form submission on Enter key press
+            }
+        });
+    });
+
+    function sendMessage() {
+        var userMessage = $('#user-message').val();
+        var selectedModel = $('#model-select').val();
+        if (userMessage.trim() === "") {
+            alert("Please type a message.");
+            return;
+        }
+
+        // Add user's message to the chat
+        $('#chat-box').append('<p><strong>You:</strong> ' + userMessage + '</p>');
+
+        // Scroll to the bottom of the chat box
+        $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+
+        // Clear the input box
+        $('#user-message').val('');
+
+        // Send the message to the server
+        $.ajax({
+            url: "{% url 'chatbot' %}",
+            type: 'POST',
+            data: {
+                'message': userMessage,
+                'model': selectedModel,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                // Add the AI assistant's response to the chat
+                $('#chat-box').append('<p><strong>AI Assistant:</strong> ' + response.response + '</p>');
+
+                // Scroll to the bottom of the chat box
+                $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+            },
+            error: function(error) {
+                alert("An error occurred. Please try again.");
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
+{% endblock content %}

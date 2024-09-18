@@ -1,0 +1,40 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Notificações</h2>
+
+    <div class="mt-4">
+        <h4>Notificações Não Lidas</h4>
+        {% if notifications_unread %}
+            <ul class="list-group">
+                {% for notification in notifications_unread %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ notification.message }}
+                    <span class="text-muted">{{ notification.date_created|date:"d/m/Y H:i" }}</span>
+                    <a href="{% url 'mark_as_read' notification.id %}" class="btn btn-success btn-sm">Read</a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nenhuma notificação não lida.</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-5">
+        <h4>Notificações Lidas</h4>
+        {% if notifications_read %}
+            <ul class="list-group">
+                {% for notification in notifications_read %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ notification.message }}
+                    <span class="text-muted">{{ notification.date_created|date:"d/m/Y H:i" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nenhuma notificação lida.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

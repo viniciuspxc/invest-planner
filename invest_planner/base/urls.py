@@ -6,7 +6,6 @@ from .views import InvestmentList, InvestmentDetail
 from .views import InvestmentCreate, InvestmentUpdate, InvestmentDelete
 from .views import IncomeList, IncomeCreate, IncomeUpdate, IncomeDelete
 from .views import ExpenseList, ExpenseCreate, ExpenseUpdate, ExpenseDelete
-# from .views import TagCreate, TagUpdate, TagDelete
 from .views import (
     TagListView,
     InvestmentTagCreateView, InvestmentTagUpdateView, InvestmentTagDeleteView,
@@ -14,6 +13,8 @@ from .views import (
     ExpenseTagCreateView, ExpenseTagUpdateView, ExpenseTagDeleteView
 )
 from .views import InvestmentRatesView
+from .views import UserDataView, chatbot_view
+from .views import notifications_view, mark_as_read
 
 urlpatterns = [
     path('', InvestmentList.as_view(), name='investments'),
@@ -63,4 +64,10 @@ urlpatterns = [
 
     path('investment-rates/', InvestmentRatesView.as_view(),
          name='investment-rates'),
+
+    path('summarize/', UserDataView, name='summarize'),
+    path('chatbot/', chatbot_view, name='chatbot'),
+
+    path('notifications/', notifications_view, name='notifications'),
+    path('notifications/read/<int:notification_id>/', mark_as_read, name='mark_as_read'),
 ]
